@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: postgres
     # Проброс портов: внешний:внутренний
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - inventory-data:/var/lib/postgresql/data
     # Healthcheck - проверка, что сервис здоров
