@@ -66,6 +66,11 @@
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>${springdoc.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -104,6 +109,33 @@
 							<version>1.22.0</version>
 						</googleJavaFormat>
 					</java>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.8</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<excludes>
+						<exclude>**/dto/**</exclude>        <!-- DTO классы -->
+						<exclude>**/entity/**</exclude>     <!-- Entity -->
+						<exclude>**/config/**</exclude>     <!-- Конфиги -->
+						<exclude>**/*Application.class</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
 		</plugins>
