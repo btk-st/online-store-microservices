@@ -20,3 +20,9 @@ spring:
 # Отключаем gRPC для тестов
 grpc:
   enabled: false
+
+logging:
+  level:
+    root: INFO
+    org.springframework: WARN
+    com.onlinestore.inventory: DEBUG
