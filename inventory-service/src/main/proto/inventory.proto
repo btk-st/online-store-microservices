@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package com.onlinestore.inventory;
+
+option java_multiple_files = true;
+option java_package = "com.onlinestore.inventory.grpc";
+option java_outer_classname = "InventoryProto";
+
+// ==================== СЕРВИС ====================
+service InventoryService {
+  // Проверить наличие товара
+  rpc CheckAvailability (ProductAvailabilityRequest) returns (ProductAvailabilityResponse);
+}
+
+// ==================== ЗАПРОСЫ ====================
+message ProductAvailabilityRequest {
+  string product_id = 1;           // UUID товара
+  int32 requested_quantity = 2;    // Запрошенное количество
+}
+
+
+// ==================== ОТВЕТЫ ====================
+message ProductAvailabilityResponse {
+  string product_id = 1;
+  string product_name = 2;
+  double price = 3;
+  double discount = 4;             // Скидка (0-100)
+  int32 available_quantity = 5;
+  bool is_available = 6;           // Достаточно ли товара?
+  string message = 7;              // Сообщение об ошибке или информации
+}
+

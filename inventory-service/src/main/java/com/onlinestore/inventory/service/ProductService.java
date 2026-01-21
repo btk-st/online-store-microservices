@@ -75,4 +75,9 @@ public class ProductService {
   private Product findProductOrThrow(UUID id) {
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
   }
+
+  public Product getProductEntityById(UUID id) {
+    log.info("Getting product entity by id: {}", id);
+    return findProductOrThrow(id);
+  }
 }
