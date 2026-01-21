@@ -3,6 +3,7 @@ package com.onlinestore.inventory.exception;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -51,5 +52,18 @@ public class GlobalExceptionHandler {
             .message(ex.getMessage())
             .build();
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(TypeMismatchException.class)
+  public ResponseEntity<ErrorResponse> handleTypeMismatch(TypeMismatchException ex) {
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Bad Request")
+            .message("Invalid parameter format")
+            .build();
+
+    return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
   }
 }
