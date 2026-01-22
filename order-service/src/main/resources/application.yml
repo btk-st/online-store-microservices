@@ -1,0 +1,68 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: order-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/order_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: orderCreated:com.onlinestore.order.kafka.OrderCreatedEvent
+
+# gRPC Configuration
+grpc:
+  client:
+    inventory-service:
+      address: static://localhost:9090  # Inventory Service gRPC port
+      negotiation-type: plaintext
+
+# JWT Configuration
+jwt:
+  secret: "your-256-bit-secret-change-this-in-production-minimum-32-chars"
+  expiration: 86400000  # 24 hours in milliseconds
+
+# Security
+security:
+  jwt:
+    secret: ${jwt.secret}
+    expiration: ${jwt.expiration}
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.onlinestore.order: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.kafka: DEBUG
