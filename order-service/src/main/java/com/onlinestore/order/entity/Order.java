@@ -55,35 +55,20 @@ public class Order {
     public enum OrderStatus {
         CREATED, PROCESSING, COMPLETED, CANCELLED
     }
-}
 
-@Entity
-@Table(name = "order_items")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-class OrderItem {
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+    }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    public void removeItem(OrderItem item) {
+        items.remove(item);
+        item.setOrder(null);
+    }
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
-
-    private UUID productId;
-
-    private String productName;
-
-    private Integer quantity;
-
-    private BigDecimal unitPrice;
-
-    private BigDecimal discount;
-
-    public BigDecimal getTotalPrice() {
-        return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    public BigDecimal calculateTotalPrice() {
+        return items.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

@@ -38,6 +38,9 @@ grpc:
     inventory-service:
       address: static://localhost:9090  # Inventory Service gRPC port
       negotiation-type: plaintext
+      enable-keep-alive: true
+      keep-alive-timeout: 10s
+      max-inbound-message-size: 4194304  # 4M
 
 # JWT Configuration
 jwt:
