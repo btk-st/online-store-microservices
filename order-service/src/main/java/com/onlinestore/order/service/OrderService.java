@@ -7,6 +7,7 @@ import com.onlinestore.order.entity.User;
 import com.onlinestore.order.exception.OrderNotFoundException;
 import com.onlinestore.order.exception.ProductNotAvailableException;
 import com.onlinestore.order.grpc.InventoryGrpcClient;
+import com.onlinestore.order.kafka.OrderKafkaProducer;
 import com.onlinestore.order.repository.OrderRepository;
 import com.onlinestore.order.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,8 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final InventoryGrpcClient inventoryClient;
+    private final TransactionalOutboxService transactionalOutboxService;
+    private final OrderKafkaProducer orderKafkaProducer;
 
     @Transactional
     public Order createOrder(UUID userId, CreateOrderRequest request) {
@@ -71,6 +74,12 @@ public class OrderService {
 
         // 6. Сохраняем заказ
         Order savedOrder = orderRepository.save(order);
+
+        // 7. Отправляем в аутбокс
+        transactionalOutboxService.saveOrderCreatedEvent(savedOrder);
+
+        //8. Отправляем в кафку (мб с ошибкой, заказ все равно будет сделан + сохранен в аутбокс
+        orderKafkaProducer.sendOrderCreated(savedOrder);
 
         log.info("Order created successfully: {}", savedOrder.getId());
         return savedOrder;
