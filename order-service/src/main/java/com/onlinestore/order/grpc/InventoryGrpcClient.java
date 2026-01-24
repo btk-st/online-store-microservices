@@ -68,15 +68,6 @@ public class InventoryGrpcClient {
         return response;
     }
 
-    /**
-     * Проверяет доступность нескольких товаров
-     */
-    public void checkMultipleAvailability(List<ProductCheck> products) {
-        for (ProductCheck product : products) {
-            checkAvailabilityOrThrow(product.getProductId(), product.getQuantity());
-        }
-    }
-
     // Вспомогательные классы
     @Data
     @Builder

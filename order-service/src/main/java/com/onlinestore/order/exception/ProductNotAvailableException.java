@@ -1,5 +1,8 @@
 package com.onlinestore.order.exception;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 import java.util.UUID;
 
 public class ProductNotAvailableException extends RuntimeException {
@@ -16,5 +19,16 @@ public class ProductNotAvailableException extends RuntimeException {
         this.availableQuantity = availableQuantity;
     }
 
-    // геттеры
+    public UUID getProductId() {
+        return productId;
+    }
+
+    public int getAvailableQuantity() {
+        return availableQuantity;
+    }
+
+    public int getRequestedQuantity() {
+        return requestedQuantity;
+    }
+
 }
