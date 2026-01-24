@@ -85,6 +85,21 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       GRPC_CLIENT_INVENTORY-SERVICE_ADDRESS: inventory-service:9090
 
+  #Notification микросервис
+  notification-service:
+    build: ./notification-service
+    container_name: notification-microservice
+    ports:
+      - "8083:8080"
+    depends_on:
+      kafka:
+        condition: service_started
+      notification-db:
+        condition: service_healthy
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://notification-db:5432/notification_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
   #Zookeeper
   zookeeper:
