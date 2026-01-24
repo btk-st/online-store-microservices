@@ -81,6 +81,19 @@ services:
     ports:
       - "8080:8080"  # веб-интерфейс будет на http://localhost:8080
 
+  # СЕРВИС 6: База для Notification Service
+  notification-db:
+    image: postgres:15-alpine
+    container_name: notification-postgres
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - notification-data:/var/lib/postgresql/data
+
 # Тома (volumes) - постоянное хранилище данных
 volumes:
   inventory-data:
