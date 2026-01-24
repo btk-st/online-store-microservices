@@ -28,7 +28,7 @@ public class TransactionalOutboxService {
 
     private final OutboxEventRepository outboxRepository;
     private final ObjectMapper objectMapper;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
 
     // Вызывается в той же транзакции что и создание Order
     public void saveOrderCreatedEvent(Order order) {
@@ -78,12 +78,15 @@ public class TransactionalOutboxService {
 
     private void sendEventToKafka(OutboxEvent event) {
         try {
-            // Парсим JSON payload
-            JsonNode jsonNode = objectMapper.readTree(event.getPayload());
-            String orderId = jsonNode.get("orderId").asText();
+            // Десериализуй из JSON в OrderCreatedEvent
+            OrderCreatedEvent orderEvent = objectMapper.readValue(
+                    event.getPayload(),
+                    OrderCreatedEvent.class
+            );
 
+            String orderId = orderEvent.getOrderId().toString();
             // Отправляем в Kafka
-            kafkaTemplate.send("orders", orderId, event.getPayload())
+            kafkaTemplate.send("orders", orderId, orderEvent)
                     .get(5, TimeUnit.SECONDS); // Блокируем для надежности
 
             log.info("Outbox event {} sent to Kafka", event.getId());
