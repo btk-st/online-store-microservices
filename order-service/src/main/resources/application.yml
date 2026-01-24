@@ -1,12 +1,12 @@
 server:
-  port: 8082
+  port: 8080
 
 spring:
   application:
     name: order-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/order_db
+    url: ${SPRING_DATASOURCE_URL}
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -25,7 +25,7 @@ spring:
     locations: classpath:db/migration
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -36,7 +36,7 @@ spring:
 grpc:
   client:
     inventory-service:
-      address: static://localhost:9090  # Inventory Service gRPC port
+      address: static://${GRPC_CLIENT_INVENTORY-SERVICE_ADDRESS}  # Inventory Service gRPC port
       negotiation-type: plaintext
       enable-keep-alive: true
       keep-alive-timeout: 10s
