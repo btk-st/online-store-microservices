@@ -1,5 +1,6 @@
 package com.onlinestore.order.controller;
 
+import com.onlinestore.order.controller.api.AuthApi;
 import com.onlinestore.order.dto.AuthResponse;
 import com.onlinestore.order.dto.LoginRequest;
 import com.onlinestore.order.dto.RegisterRequest;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthApi {
 
     private final UserService userService;
     private final JwtService jwtService;
@@ -27,6 +28,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/reg")
+    @Override
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         User user = authService.register(request);
         String token = jwtService.generateToken(user);
@@ -42,6 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Override
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -64,6 +67,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
+    @Override
     public ResponseEntity<AuthResponse> refreshToken(
             @RequestHeader("Authorization") String authHeader) {
 

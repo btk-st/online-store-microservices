@@ -1,5 +1,6 @@
 package com.onlinestore.order.controller;
 
+import com.onlinestore.order.controller.api.UserApi;
 import com.onlinestore.order.dto.UpdateUserRequest;
 import com.onlinestore.order.dto.UserResponse;
 import com.onlinestore.order.entity.User;
@@ -21,14 +22,12 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-@Tag(name = "Users", description = "User management API")
-@SecurityRequirement(name = "bearerAuth")
-public class UserController {
+public class UserController implements UserApi {
 
     private final UserService userService;
 
-    @Operation(summary = "Get current user profile")
     @GetMapping("/me")
+    @Override
     public ResponseEntity<UserResponse> getCurrentUser(
             @AuthenticationPrincipal User currentUser) {
 
@@ -36,19 +35,19 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get user by ID (Admin only)")
     @GetMapping("/{userId}")
     //TODO: не работают роли
     @PreAuthorize("hasRole('ADMIN')")
+    @Override
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID userId) {
         User user = userService.getUserById(userId);
         UserResponse response = mapToResponse(user);
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get all users (Admin only)")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Override
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         List<UserResponse> responses = users.stream()
@@ -57,8 +56,8 @@ public class UserController {
         return ResponseEntity.ok(responses);
     }
 
-    @Operation(summary = "Update current user profile")
     @PutMapping("/me")
+    @Override
     public ResponseEntity<UserResponse> updateCurrentUser(
             @AuthenticationPrincipal User currentUser,
             @Valid @RequestBody UpdateUserRequest request) {
@@ -68,9 +67,9 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Update any user (Admin only)")
     @PutMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Override
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable UUID userId,
             @Valid @RequestBody UpdateUserRequest request) {
@@ -80,9 +79,8 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Delete current user account")
     @DeleteMapping("/me")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Override
     public ResponseEntity<Void> deleteCurrentUser(
             @AuthenticationPrincipal User currentUser) {
 
@@ -90,10 +88,9 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Delete user (Admin only)")
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Override
     public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
