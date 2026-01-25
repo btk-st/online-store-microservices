@@ -19,7 +19,7 @@ import java.util.UUID;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-//    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
 
     @Override
@@ -37,7 +37,6 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll();
     }
 
-    //TODO: добавить апдейт пароля
     public User updateUser(UUID userId, UpdateUserRequest request) {
         User user = getUserById(userId);
 
@@ -56,7 +55,7 @@ public class UserService implements UserDetailsService {
         }
 
         if (request.getPassword() != null) {
-//            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         return userRepository.save(user);
