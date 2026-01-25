@@ -22,6 +22,7 @@ public class GlobalExceptionHandler {
 
     // Обработка ProductNotAvailableException
     @ExceptionHandler(ProductNotAvailableException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public ErrorResponse handleProductNotAvailable(ProductNotAvailableException ex) {
         log.warn("Product not available: {}", ex.getMessage());
 

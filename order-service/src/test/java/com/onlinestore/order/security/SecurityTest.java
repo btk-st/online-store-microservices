@@ -1,4 +1,4 @@
-package com.onlinestore.order.integration;
+package com.onlinestore.order.security;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
