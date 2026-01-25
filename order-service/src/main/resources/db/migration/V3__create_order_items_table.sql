@@ -4,8 +4,8 @@ CREATE TABLE order_items (
                              product_id UUID NOT NULL,
                              product_name VARCHAR(255) NOT NULL,
                              quantity INTEGER NOT NULL CHECK (quantity > 0),
-                             unit_price DECIMAL(10, 2) NOT NULL CHECK (unit_price >= 0),
-                             discount DECIMAL(5, 2) DEFAULT 0 CHECK (discount >= 0 AND discount <= 100),
+                             price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+                             sale DECIMAL(5, 2) DEFAULT 0 CHECK (sale >= 0 AND sale <= 100),
                              CONSTRAINT fk_order_items_order FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 

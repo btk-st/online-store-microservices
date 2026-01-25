@@ -1,26 +1,26 @@
 package com.onlinestore.order.entity;
 
 
-import com.onlinestore.order.entity.Order;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Entity
-@Table(name = "order_items")
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "order_items")
 public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,16 +37,16 @@ public class OrderItem {
     private Integer quantity;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal unitPrice;
+    private BigDecimal price;
 
     @Column(precision = 5, scale = 2)
     @Builder.Default
-    private BigDecimal discount = BigDecimal.ZERO;
+    private BigDecimal sale = BigDecimal.ZERO;
 
     @Transient
     public BigDecimal getTotalPrice() {
-        BigDecimal priceWithDiscount = unitPrice
-                .multiply(BigDecimal.ONE.subtract(discount.divide(BigDecimal.valueOf(100))));
+        BigDecimal priceWithDiscount = price
+                .multiply(BigDecimal.ONE.subtract(sale.divide(BigDecimal.valueOf(100))));
         return priceWithDiscount.multiply(BigDecimal.valueOf(quantity));
     }
 }

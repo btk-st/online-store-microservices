@@ -36,9 +36,5 @@ public class CreateOrderRequest {
 
         @NotNull(message = "Quantity is required")
         private Integer quantity;
-
-        // Цена и скидка будут получены из Inventory Service
-        private BigDecimal price;
-        private BigDecimal discount;
     }
 }

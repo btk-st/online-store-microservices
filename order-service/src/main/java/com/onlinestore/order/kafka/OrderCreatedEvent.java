@@ -19,9 +19,6 @@ public class OrderCreatedEvent {
 
     private UUID orderId;
     private UUID userId;
-    private String username;
-    private BigDecimal totalAmount;
-    private LocalDateTime orderDate;
     private List<OrderItemEvent> items;
 
     @Data
@@ -30,26 +27,21 @@ public class OrderCreatedEvent {
     @AllArgsConstructor
     public static class OrderItemEvent {
         private UUID productId;
-        private String productName;
         private Integer quantity;
-        private BigDecimal unitPrice;
-        private BigDecimal discount;
+        private BigDecimal price;
+        private BigDecimal sale;
     }
 
     public static OrderCreatedEvent from(Order order) {
         return OrderCreatedEvent.builder()
                 .orderId(order.getId())
                 .userId(order.getUser().getId())
-                .username(order.getUser().getUsername())
-                .totalAmount(order.getTotalPrice())
-                .orderDate(order.getCreatedAt())
                 .items(order.getItems().stream()
                         .map(item -> OrderItemEvent.builder()
                                 .productId(item.getProductId())
-                                .productName(item.getProductName())
                                 .quantity(item.getQuantity())
-                                .unitPrice(item.getUnitPrice())
-                                .discount(item.getDiscount())
+                                .price(item.getPrice())
+                                .sale(item.getSale())
                                 .build())
                         .toList())
                 .build();

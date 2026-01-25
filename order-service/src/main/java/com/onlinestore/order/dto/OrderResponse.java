@@ -20,7 +20,6 @@ public class OrderResponse {
     private UUID id;
     private UUID userId;
     private String username;
-    private Order.OrderStatus status;
     private BigDecimal totalPrice;
     private List<OrderItemResponse> items;
     private LocalDateTime createdAt;
@@ -35,8 +34,8 @@ public class OrderResponse {
         private UUID productId;
         private String productName;
         private Integer quantity;
-        private BigDecimal unitPrice;
-        private BigDecimal discount;
+        private BigDecimal price;
+        private BigDecimal sale;
         private BigDecimal totalPrice;
     }
 
@@ -45,21 +44,17 @@ public class OrderResponse {
                 .id(order.getId())
                 .userId(order.getUser().getId())
                 .username(order.getUser().getUsername())
-                .status(order.getStatus())
-                .totalPrice(order.getTotalPrice())
                 .items(order.getItems().stream()
                         .map(item -> OrderItemResponse.builder()
                                 .id(item.getId())
                                 .productId(item.getProductId())
                                 .productName(item.getProductName())
                                 .quantity(item.getQuantity())
-                                .unitPrice(item.getUnitPrice())
-                                .discount(item.getDiscount())
+                                .price(item.getPrice())
+                                .sale(item.getSale())
                                 .totalPrice(item.getTotalPrice())
                                 .build())
                         .toList())
-                .createdAt(order.getCreatedAt())
-                .updatedAt(order.getUpdatedAt())
                 .build();
     }
 }

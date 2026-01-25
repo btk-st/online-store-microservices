@@ -105,8 +105,6 @@ public class UserController {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 }

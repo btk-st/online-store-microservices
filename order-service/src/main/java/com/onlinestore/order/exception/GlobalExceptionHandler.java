@@ -21,7 +21,6 @@ public class GlobalExceptionHandler {
 
     // Обработка ProductNotAvailableException
     @ExceptionHandler(ProductNotAvailableException.class)
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY) // 422
     public ErrorResponse handleProductNotAvailable(ProductNotAvailableException ex) {
         log.warn("Product not available: {}", ex.getMessage());
 
@@ -40,7 +39,6 @@ public class GlobalExceptionHandler {
 
     // Обработка валидации (Bean Validation)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400
     public ErrorResponse handleValidation(MethodArgumentNotValidException ex) {
         Map<String, Object> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
@@ -58,7 +56,6 @@ public class GlobalExceptionHandler {
 
     // Обработка всех остальных исключений
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR) // 500
     public ErrorResponse handleAll(Exception ex) {
         String errorId = UUID.randomUUID().toString();
         log.error("Internal error [{}]: {}", errorId, ex.getMessage(), ex);

@@ -67,14 +67,4 @@ public class InventoryGrpcClient {
 
         return response;
     }
-
-    // Вспомогательные классы
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ProductCheck {
-        private UUID productId;
-        private int quantity;
-    }
 }

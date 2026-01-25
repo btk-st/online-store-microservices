@@ -38,9 +38,6 @@ public class TransactionalOutboxService {
             String payload = objectMapper.writeValueAsString(event);
 
             OutboxEvent outboxEvent = OutboxEvent.builder()
-                    .eventType(OutboxEvent.EventType.ORDER_CREATED)
-                    .aggregateType("ORDER")
-                    .aggregateId(order.getId().toString())
                     .payload(payload)
                     .status(OutboxEvent.EventStatus.PENDING)
                     .retryCount(0)
@@ -65,7 +62,6 @@ public class TransactionalOutboxService {
             try {
                 sendEventToKafka(event);
                 event.setStatus(OutboxEvent.EventStatus.PROCESSED);
-                event.setProcessedAt(LocalDateTime.now());
             } catch (Exception e) {
                 event.setRetryCount(event.getRetryCount() + 1);
                 if (event.getRetryCount() >= 3) {

@@ -18,6 +18,4 @@ public class UserResponse {
     private String username;
     private String email;
     private User.Role role;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

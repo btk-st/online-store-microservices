@@ -1,5 +1,6 @@
 package com.onlinestore.order.dto;
 
+import com.onlinestore.order.entity.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -21,4 +22,6 @@ public class UpdateUserRequest {
 
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
+
+    private User.Role role;
 }

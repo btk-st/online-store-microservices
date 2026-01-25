@@ -12,18 +12,4 @@ import java.util.UUID;
 public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> {
 
     List<OutboxEvent> findByStatus(OutboxEvent.EventStatus status);
-
-    List<OutboxEvent> findByStatusAndCreatedAtBefore(
-            OutboxEvent.EventStatus status,
-            LocalDateTime createdAt);
-
-    List<OutboxEvent> findByAggregateTypeAndAggregateId(
-            String aggregateType,
-            String aggregateId);
-
-    void deleteByStatusAndProcessedAtBefore(
-            OutboxEvent.EventStatus status,
-            LocalDateTime processedAt);
-
-    long countByStatus(OutboxEvent.EventStatus status);
 }

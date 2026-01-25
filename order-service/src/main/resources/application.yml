@@ -6,7 +6,7 @@ spring:
     name: order-service
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/order_db}
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -36,7 +36,7 @@ spring:
 grpc:
   client:
     inventory-service:
-      address: static://${GRPC_CLIENT_INVENTORY-SERVICE_ADDRESS}  # Inventory Service gRPC port
+      address: static://${GRPC_CLIENT_INVENTORY-SERVICE_ADDRESS:localhost:9090}  # Inventory Service gRPC port
       negotiation-type: plaintext
       enable-keep-alive: true
       keep-alive-timeout: 10s
