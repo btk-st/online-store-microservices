@@ -53,8 +53,8 @@ public class InventoryGrpcServiceImpl extends InventoryServiceGrpc.InventoryServ
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
-        } catch (ProductNotFoundException e) {
-            // Товар не найден
+        } catch (ProductNotFoundException | IllegalArgumentException e) {
+            // Товар не найден или uuid неверный формат
             ProductAvailabilityResponse response = ProductAvailabilityResponse.newBuilder()
                     .setProductId(request.getProductId())
                     .setIsAvailable(false)
