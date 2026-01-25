@@ -2,14 +2,14 @@ package com.onlinestore.inventory.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
+import lombok.*;
+
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,6 +19,7 @@ public class Product {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
+  @EqualsAndHashCode.Include
   private UUID id;
 
   @Column(nullable = false)
@@ -32,19 +33,4 @@ public class Product {
 
   @Column(precision = 5, scale = 2)
   private BigDecimal sale; // скидка в процентах (например 15.50)
-
-  @Column(updatable = false)
-  private LocalDateTime createdAt;
-
-  private LocalDateTime updatedAt;
-
-  @PrePersist
-  protected void onCreate() {
-    createdAt = LocalDateTime.now();
-  }
-
-  @PreUpdate
-  protected void onUpdate() {
-    updatedAt = LocalDateTime.now();
-  }
 }

@@ -45,22 +45,6 @@ public class ProductService {
   }
 
   @Transactional
-  public ProductResponse updateProduct(UUID id, CreateProductRequest request) {
-    log.info("Updating product with id: {}", id);
-
-    Product product = findProductOrThrow(id);
-    product.setName(request.getName());
-    product.setQuantity(request.getQuantity());
-    product.setPrice(request.getPrice());
-    product.setSale(request.getSale() != null ? request.getSale() : product.getSale());
-
-    Product updatedProduct = productRepository.save(product);
-    log.info("Product updated: {}", updatedProduct.getId());
-
-    return productMapper.toResponse(updatedProduct);
-  }
-
-  @Transactional
   public void deleteProduct(UUID id) {
     log.info("Deleting product with id: {}", id);
 

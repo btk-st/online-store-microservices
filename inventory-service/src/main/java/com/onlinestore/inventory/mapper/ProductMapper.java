@@ -25,8 +25,6 @@ public class ProductMapper {
         .quantity(product.getQuantity())
         .price(product.getPrice())
         .sale(product.getSale())
-        .createdAt(product.getCreatedAt())
-        .updatedAt(product.getUpdatedAt())
         .build();
   }
 }

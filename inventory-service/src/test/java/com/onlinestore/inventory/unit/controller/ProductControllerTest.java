@@ -34,9 +34,11 @@ class ProductControllerTest {
   private MockMvc mockMvc;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  @Mock private ProductService productService;
+  @Mock
+  private ProductService productService;
 
-  @InjectMocks private ProductController productController;
+  @InjectMocks
+  private ProductController productController;
 
   private UUID productId;
   private ProductResponse productResponse;
@@ -148,47 +150,6 @@ class ProductControllerTest {
 
     assertThat(response.getStatus()).isEqualTo(HttpStatus.CREATED.value());
     verify(productService).createProduct(any(CreateProductRequest.class));
-  }
-
-  @Test
-  void updateProduct_shouldReturn200AndUpdatedProduct() throws Exception {
-
-    when(productService.updateProduct(eq(productId), any(CreateProductRequest.class)))
-        .thenReturn(productResponse);
-
-    String requestBody = objectMapper.writeValueAsString(createRequest);
-
-    MockHttpServletResponse response =
-        mockMvc
-            .perform(
-                put("/api/products/{id}", productId)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(requestBody))
-            .andReturn()
-            .getResponse();
-
-    assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-    verify(productService).updateProduct(eq(productId), any(CreateProductRequest.class));
-  }
-
-  @Test
-  void updateProduct_shouldReturn404_whenProductNotFound() throws Exception {
-
-    when(productService.updateProduct(eq(productId), any(CreateProductRequest.class)))
-        .thenThrow(new ProductNotFoundException(productId));
-
-    String requestBody = objectMapper.writeValueAsString(createRequest);
-
-    MockHttpServletResponse response =
-        mockMvc
-            .perform(
-                put("/api/products/{id}", productId)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(requestBody))
-            .andReturn()
-            .getResponse();
-
-    assertThat(response.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
   }
 
   @Test
