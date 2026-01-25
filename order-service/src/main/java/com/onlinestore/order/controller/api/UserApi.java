@@ -28,14 +28,12 @@ public interface UserApi {
     ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User currentUser);
 
     @Operation(summary = "Get user by ID (Admin only)")
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{userId}")
     ResponseEntity<UserResponse> getUserById(
             @Parameter(description = "User UUID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID userId);
 
     @Operation(summary = "Get all users (Admin only)")
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     ResponseEntity<List<UserResponse>> getAllUsers();
 
@@ -46,7 +44,6 @@ public interface UserApi {
             @Valid @RequestBody UpdateUserRequest request);
 
     @Operation(summary = "Update any user (Admin only)")
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{userId}")
     ResponseEntity<UserResponse> updateUser(
             @Parameter(description = "User UUID", example = "123e4567-e89b-12d3-a456-426614174000")
@@ -58,7 +55,6 @@ public interface UserApi {
     ResponseEntity<Void> deleteCurrentUser(@AuthenticationPrincipal User currentUser);
 
     @Operation(summary = "Delete user (Admin only)")
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{userId}")
     ResponseEntity<Void> deleteUser(
             @Parameter(description = "User UUID", example = "123e4567-e89b-12d3-a456-426614174000")

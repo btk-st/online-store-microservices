@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -39,6 +40,7 @@ public class GlobalExceptionHandler {
 
     // Обработка валидации (Bean Validation)
     @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)  // ← 400
     public ErrorResponse handleValidation(MethodArgumentNotValidException ex) {
         Map<String, Object> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
@@ -54,18 +56,13 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
-    // Обработка всех остальных исключений
-    @ExceptionHandler(Exception.class)
-    public ErrorResponse handleAll(Exception ex) {
-        String errorId = UUID.randomUUID().toString();
-        log.error("Internal error [{}]: {}", errorId, ex.getMessage(), ex);
-
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)  // ← 400
+    public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
         return ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                .message("Internal server error. Reference: " + errorId)
-                .details(Map.of("errorId", errorId))
+                .status(400)
+                .error("Bad Request")
+                .message(ex.getMessage())
                 .build();
     }
 

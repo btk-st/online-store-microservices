@@ -36,7 +36,6 @@ public class UserController implements UserApi {
     }
 
     @GetMapping("/{userId}")
-    //TODO: не работают роли
     @PreAuthorize("hasRole('ADMIN')")
     @Override
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID userId) {
@@ -89,7 +88,7 @@ public class UserController implements UserApi {
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
         userService.deleteUser(userId);
