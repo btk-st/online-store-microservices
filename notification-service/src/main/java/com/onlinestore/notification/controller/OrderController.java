@@ -1,5 +1,8 @@
 package com.onlinestore.notification.controller;
 
+import com.onlinestore.notification.controller.api.OrderApi;
+import com.onlinestore.notification.dto.OrderDto;
+import com.onlinestore.notification.dto.OrderDto.OrderItemDto;
 import com.onlinestore.notification.entity.OrderEntity;
 import com.onlinestore.notification.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,31 +21,26 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
-@Tag(name = "Orders API", description = "API для работы с заказами")
-public class OrderController {
+public class OrderController implements OrderApi {
     private final OrderService orderService;
 
-    @Operation(summary = "Получить все заказы")
-    @ApiResponse(responseCode = "200", description = "Список всех заказов")
     @GetMapping("/all")
-    public List<OrderEntity> getAllOrders() {
+    @Override
+    public List<OrderDto> getAllOrders() {
         return orderService.getAllOrders();
     }
 
-    @Operation(summary = "Получить заказы по ID заказа")
-    @ApiResponse(responseCode = "200", description = "Список заказов")
-    @ApiResponse(responseCode = "200", description = "Пустой список если заказы не найдены")
     @GetMapping("/order/{orderId}")
-    public List<OrderEntity> getOrdersByOrderId(
-            @Parameter(description = "ID заказа") @PathVariable UUID orderId) {
-        return orderService.getOrdersByOrderId(orderId);
+    @Override
+    public OrderDto getItemsByOrderId(
+            @PathVariable UUID orderId) {
+        return orderService.getItemsByOrderId(orderId);
     }
 
-    @Operation(summary = "Получить заказы по ID пользователя")
-    @ApiResponse(responseCode = "200", description = "Список заказов пользователя")
     @GetMapping("/user/{userId}")
-    public List<OrderEntity> getOrdersByUserId(
-            @Parameter(description = "ID пользователя") @PathVariable UUID userId) {
+    @Override
+    public List<OrderDto> getOrdersByUserId(
+            @PathVariable UUID userId) {
         return orderService.getOrdersByUserId(userId);
     }
 }

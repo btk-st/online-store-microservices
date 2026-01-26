@@ -45,10 +45,10 @@ public class OrderConsumerService {
         for (OrderCreatedEvent.OrderItemEvent item : event.getItems()) {
 
             BigDecimal discountMultiplier = BigDecimal.ONE
-                    .subtract(item.getDiscount()
+                    .subtract(item.getSale()
                             .divide(BigDecimal.valueOf(100)));
 
-            BigDecimal itemTotalPrice = item.getUnitPrice()
+            BigDecimal itemTotalPrice = item.getPrice()
                     .multiply(BigDecimal.valueOf(item.getQuantity()))
                     .multiply(discountMultiplier);
 
@@ -57,8 +57,8 @@ public class OrderConsumerService {
                     .userId(event.getUserId())
                     .productId(item.getProductId())
                     .quantity(item.getQuantity())
-                    .price(item.getUnitPrice())
-                    .sale(item.getDiscount())
+                    .price(item.getPrice())
+                    .sale(item.getSale())
                     .totalPrice(itemTotalPrice)
                     .build();
 
