@@ -20,10 +20,7 @@ public class OrderResponse {
     private UUID id;
     private UUID userId;
     private String username;
-    private BigDecimal totalPrice;
     private List<OrderItemResponse> items;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
     @Data
     @Builder
