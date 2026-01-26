@@ -36,7 +36,7 @@ spring:
 grpc:
   client:
     inventory-service:
-      address: static://${GRPC_CLIENT_INVENTORY-SERVICE_ADDRESS:localhost:9090}  # Inventory Service gRPC port
+      address: static://${GRPC_CLIENT_INVENTORY_SERVICE_ADDRESS:localhost:9090}  # Inventory Service gRPC port
       negotiation-type: plaintext
       enable-keep-alive: true
       keep-alive-timeout: 10s
