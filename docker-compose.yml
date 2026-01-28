@@ -148,9 +148,19 @@ services:
     ports:
       - "8090:8080"  # веб-интерфейс будет на http://localhost:8080
 
+  #Redis
+  redis:
+    image: redis:alpine
+    container_name: my-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes  # сохраняет данные при перезагрузке
 
 # Тома (volumes) - постоянное хранилище данных
 volumes:
   inventory-data:
   order-data:
   notification-data:
+  redis_data:

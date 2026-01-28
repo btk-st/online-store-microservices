@@ -6,7 +6,7 @@ spring:
     name: notification-service
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5436/notification_db}
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -20,7 +20,7 @@ spring:
     show-sql: true
 
   kafka:
-    bootstrap-servers:  ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers:  ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: notification-service-group
       auto-offset-reset: earliest
@@ -32,6 +32,12 @@ spring:
       enable-auto-commit: false
     listener:
       ack-mode: manual_immediate
+      
+  # Redis конфигурация
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 logging:
   level:
