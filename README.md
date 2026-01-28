@@ -28,34 +28,21 @@ docker-compose up -d
 | **Kafka UI** | 8090 | Мониторинг Kafka |
 | **Redis** | 6379 | Кэширование |
 
-## 📡 API Endpoints
+## 📖 Документация API (Swagger)
 
-### 🔐 Order Service (8082) - Авторизация
-```
-POST   /auth/register     - Регистрация
-POST   /auth/login        - Вход (получить JWT токен)
-POST   /auth/refresh      - Обновить токен
-```
+После запуска системы документация API доступна по адресам:
 
-### 🛒 Order Service (8082) - Заказы
-```
-POST   /api/orders        - Создать заказ (требуется JWT)
-```
+| Сервис | Swagger UI | OpenAPI JSON |
+|--------|------------|--------------|
+| **Order Service** | http://localhost:8082/swagger-ui.html | http://localhost:8082/v3/api-docs |
+| **Inventory Service** | http://localhost:8081/swagger-ui.html | http://localhost:8081/v3/api-docs |
+| **Notification Service** | http://localhost:8083/swagger-ui.html | http://localhost:8083/v3/api-docs |
 
-### 📦 Inventory Service (8081) - Товары
-```
-GET    /api/products      - Все товары
-GET    /api/products/{id} - Товар по ID
-POST   /api/products      - Добавить товар
-DELETE /api/products/{id} - Удалить товар
-```
-
-### 📊 Notification Service (8083) - Аналитика
-```
-GET    /api/orders/all    - Все заказы
-GET    /api/orders/{id}   - Заказ по ID
-GET    /api/orders/user/{userId} - Заказы пользователя
-```
+**Swagger UI предоставляет:**
+- Полный список всех endpoint'ов
+- Возможность тестирования API прямо из браузера
+- Описание моделей данных
+- Информацию о требуемых заголовках (JWT и т.д.)
 
 ## 🛠️ Управление системой
 
