@@ -1,17 +1,20 @@
 package com.onlinestore.order.service;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.onlinestore.order.dto.CreateOrderRequest;
+import com.onlinestore.order.dto.OrderResponse;
 import com.onlinestore.order.entity.Order;
 import com.onlinestore.order.entity.OrderItem;
 import com.onlinestore.order.entity.User;
 import com.onlinestore.order.grpc.InventoryGrpcClient;
+import com.onlinestore.order.grpc.ProductAvailabilityResponse;
 import com.onlinestore.order.kafka.OrderKafkaProducer;
+import com.onlinestore.order.mapper.OrderItemMapper;
+import com.onlinestore.order.mapper.OrderMapper;
 import com.onlinestore.order.repository.OrderRepository;
 import com.onlinestore.order.repository.UserRepository;
 
@@ -28,9 +31,11 @@ public class OrderService {
 	private final InventoryGrpcClient inventoryClient;
 	private final TransactionalOutboxService transactionalOutboxService;
 	private final OrderKafkaProducer orderKafkaProducer;
+	private final OrderMapper orderMapper;
+	private final OrderItemMapper orderItemMapper;
 
 	@Transactional
-	public Order createOrder(UUID userId, CreateOrderRequest request) {
+	public OrderResponse createOrder(UUID userId, CreateOrderRequest request) {
 		log.info("Creating order for user: {}", userId);
 
 		// 1. Находим пользователя
@@ -48,14 +53,11 @@ public class OrderService {
 		// 4. Добавляем товары с проверкой доступности
 		for (CreateOrderRequest.OrderItemRequest itemRequest : request.getItems()) {
 			// Проверяем наличие через gRPC
-			var availability = inventoryClient.checkAvailabilityOrThrow(itemRequest.getProductId(),
-					itemRequest.getQuantity());
+			ProductAvailabilityResponse availability = inventoryClient
+					.checkAvailabilityOrThrow(itemRequest.getProductId(), itemRequest.getQuantity());
 
 			// Создаем OrderItem с актуальной информацией
-			OrderItem orderItem = OrderItem.builder().order(order).productId(itemRequest.getProductId())
-					.productName(availability.getProductName()).quantity(itemRequest.getQuantity())
-					.price(BigDecimal.valueOf(availability.getPrice()))
-					.sale(BigDecimal.valueOf(availability.getDiscount())).build();
+			OrderItem orderItem = orderItemMapper.toOrderItem(order, itemRequest, availability);
 
 			order.addItem(orderItem);
 		}
@@ -71,6 +73,6 @@ public class OrderService {
 		orderKafkaProducer.sendOrderCreated(savedOrder);
 
 		log.info("Order created successfully: {}", savedOrder.getId());
-		return savedOrder;
+		return orderMapper.toOrderResponse(savedOrder);
 	}
 }

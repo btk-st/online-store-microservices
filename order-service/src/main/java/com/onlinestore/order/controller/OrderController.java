@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.onlinestore.order.controller.api.OrderApi;
 import com.onlinestore.order.dto.CreateOrderRequest;
 import com.onlinestore.order.dto.OrderResponse;
-import com.onlinestore.order.entity.Order;
 import com.onlinestore.order.entity.User;
 import com.onlinestore.order.service.OrderService;
 
@@ -31,8 +30,7 @@ public class OrderController implements OrderApi {
 	public ResponseEntity<OrderResponse> createOrder(@AuthenticationPrincipal User user,
 			@Valid @RequestBody CreateOrderRequest request) {
 
-		Order order = orderService.createOrder(user.getId(), request);
-		OrderResponse response = OrderResponse.fromEntity(order);
+		OrderResponse response = orderService.createOrder(user.getId(), request);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}

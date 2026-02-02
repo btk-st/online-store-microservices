@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.onlinestore.order.exception.InventoryServiceException;
 import com.onlinestore.order.exception.ProductNotAvailableException;
+import com.onlinestore.order.mapper.ProductMapper;
 
 import io.grpc.StatusRuntimeException;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class InventoryGrpcClient {
 
 	@GrpcClient("inventory-service")
 	private InventoryServiceGrpc.InventoryServiceBlockingStub inventoryStub;
+	private ProductMapper productMapper;
 
 	/**
 	 * Проверяет доступность товара в Inventory Service
@@ -35,8 +37,7 @@ public class InventoryGrpcClient {
 		log.info("Checking availability for product: {}, quantity: {}", productId, quantity);
 
 		try {
-			ProductAvailabilityRequest request = ProductAvailabilityRequest.newBuilder()
-					.setProductId(productId.toString()).setRequestedQuantity(quantity).build();
+			ProductAvailabilityRequest request = productMapper.toAvailabilityRequest(productId, quantity);
 
 			ProductAvailabilityResponse response = inventoryStub.checkAvailability(request);
 

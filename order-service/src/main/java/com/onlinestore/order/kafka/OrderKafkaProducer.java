@@ -4,6 +4,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import com.onlinestore.order.entity.Order;
+import com.onlinestore.order.mapper.OrderMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,10 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderKafkaProducer {
 
 	private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
+	private final OrderMapper orderMapper;
 
 	public void sendOrderCreated(Order order) {
 		try {
-			OrderCreatedEvent event = OrderCreatedEvent.from(order);
+			OrderCreatedEvent event = orderMapper.toOrderCreatedEvent(order);
 			String orderId = order.getId().toString();
 
 			log.info("Sending OrderCreatedEvent to Kafka, orderId: {}", orderId);

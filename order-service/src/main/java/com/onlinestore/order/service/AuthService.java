@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.onlinestore.order.dto.RegisterRequest;
 import com.onlinestore.order.entity.User;
+import com.onlinestore.order.mapper.UserMapper;
 import com.onlinestore.order.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ public class AuthService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final UserMapper userMapper;
 
 	public User register(RegisterRequest request) {
 		if (userRepository.existsByUsername(request.getUsername())) {
@@ -25,8 +27,8 @@ public class AuthService {
 			throw new IllegalArgumentException("Email already exists");
 		}
 
-		User user = User.builder().username(request.getUsername()).email(request.getEmail())
-				.password(passwordEncoder.encode(request.getPassword())).role(User.Role.ROLE_USER).build();
+		User user = userMapper.toUser(request);
+		user.setPassword(passwordEncoder.encode(request.getPassword()));
 
 		return userRepository.save(user);
 	}

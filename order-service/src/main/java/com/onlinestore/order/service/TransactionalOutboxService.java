@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onlinestore.order.entity.Order;
 import com.onlinestore.order.entity.OutboxEvent;
 import com.onlinestore.order.kafka.OrderCreatedEvent;
+import com.onlinestore.order.mapper.OrderMapper;
 import com.onlinestore.order.repository.OutboxEventRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -27,10 +28,11 @@ public class TransactionalOutboxService {
 	private final OutboxEventRepository outboxRepository;
 	private final ObjectMapper objectMapper;
 	private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
+	private final OrderMapper orderMapper;
 
 	// Вызывается в той же транзакции что и создание Order
 	public void saveOrderCreatedEvent(Order order) {
-		OrderCreatedEvent event = OrderCreatedEvent.from(order);
+		OrderCreatedEvent event = orderMapper.toOrderCreatedEvent(order);
 
 		try {
 			String payload = objectMapper.writeValueAsString(event);

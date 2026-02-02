@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import com.onlinestore.order.entity.Order;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,10 +30,4 @@ public class OrderCreatedEvent {
 		private BigDecimal sale;
 	}
 
-	public static OrderCreatedEvent from(Order order) {
-		return OrderCreatedEvent.builder().orderId(order.getId()).userId(order.getUser().getId()).items(order.getItems()
-				.stream().map(item -> OrderItemEvent.builder().productId(item.getProductId())
-						.quantity(item.getQuantity()).price(item.getPrice()).sale(item.getSale()).build())
-				.toList()).build();
-	}
 }
