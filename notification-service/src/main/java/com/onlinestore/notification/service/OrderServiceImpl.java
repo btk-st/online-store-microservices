@@ -3,24 +3,26 @@ package com.onlinestore.notification.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.onlinestore.notification.dto.OrderDto;
-import com.onlinestore.notification.dto.OrderDto.OrderItemDto;
 import com.onlinestore.notification.entity.OrderEntity;
+import com.onlinestore.notification.mapper.OrderMapper;
 import com.onlinestore.notification.repository.OrderRepository;
+import com.onlinestore.notification.service.api.OrderService;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class OrderService {
+public class OrderServiceImpl implements OrderService {
 	private final OrderRepository orderRepository;
 	private final RedisTemplate<String, Object> redisTemplate;
+	private final OrderMapper orderMapper;
 
+	@Override
 	public List<OrderDto> getAllOrders() {
 		List<OrderDto> orders = new ArrayList<>();
 		var allOrderIds = orderRepository.findAllOrderIds();
@@ -33,6 +35,7 @@ public class OrderService {
 		return orders;
 	}
 
+	@Override
 	public OrderDto getItemsByOrderId(UUID orderId) {
 		String key = "order:" + orderId;
 		OrderDto cached = (OrderDto) redisTemplate.opsForValue().get(key);
@@ -44,12 +47,13 @@ public class OrderService {
 		if (orders.isEmpty()) {
 			return null;
 		}
-		var orderDto = mapToOrderDto(orderId, orders);
+		var orderDto = orderMapper.toOrderDto(orders);
 		// Сохраняем в кеш
 		redisTemplate.opsForValue().set(key, orderDto);
 		return orderDto;
 	}
 
+	@Override
 	public List<OrderDto> getOrdersByUserId(UUID userId) {
 		List<OrderDto> orders = new ArrayList<>();
 		var orderIdsByUserId = orderRepository.findOrderIdsByUserId(userId);
@@ -60,29 +64,5 @@ public class OrderService {
 			}
 		}
 		return orders;
-	}
-
-	private OrderDto mapToOrderDto(UUID orderId, List<OrderEntity> orderEntities) {
-		if (orderEntities.isEmpty()) {
-			return null;
-		}
-
-		// Берем userId из первой записи (у всех в группе одинаковый)
-		UUID userId = orderEntities.get(0).getUserId();
-
-		// Мапим items
-		List<OrderItemDto> items = orderEntities.stream().map(this::mapToItemDto).collect(Collectors.toList());
-
-		OrderDto order = OrderDto.builder().orderId(orderId).userId(userId).items(items).build();
-
-		// Считаем итоговую сумму
-		order.setTotalPrice(order.calculateTotalPrice());
-
-		return order;
-	}
-
-	private OrderItemDto mapToItemDto(OrderEntity entity) {
-		return OrderItemDto.builder().productId(entity.getProductId()).quantity(entity.getQuantity())
-				.price(entity.getPrice()).sale(entity.getSale()).totalPrice(entity.getTotalPrice()).build();
 	}
 }

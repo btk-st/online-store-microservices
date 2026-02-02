@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.onlinestore.notification.controller.api.OrderApi;
 import com.onlinestore.notification.dto.OrderDto;
-import com.onlinestore.notification.service.OrderService;
+import com.onlinestore.notification.service.api.OrderService;
 
 import lombok.RequiredArgsConstructor;
 
