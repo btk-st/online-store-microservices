@@ -12,6 +12,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.onlinestore.inventory.entity.Product;
@@ -19,6 +20,7 @@ import com.onlinestore.inventory.exception.ProductNotFoundException;
 import com.onlinestore.inventory.grpc.InventoryGrpcServiceImpl;
 import com.onlinestore.inventory.grpc.ProductAvailabilityRequest;
 import com.onlinestore.inventory.grpc.ProductAvailabilityResponse;
+import com.onlinestore.inventory.mapper.ProductMapper;
 import com.onlinestore.inventory.service.ProductService;
 
 import io.grpc.StatusRuntimeException;
@@ -38,6 +40,9 @@ class InventoryGrpcServiceImplTest {
 
 	@Captor
 	private ArgumentCaptor<Throwable> errorCaptor;
+
+	@Spy
+	private ProductMapper productMapper = new ProductMapper();
 
 	@InjectMocks
 	private InventoryGrpcServiceImpl grpcService;
