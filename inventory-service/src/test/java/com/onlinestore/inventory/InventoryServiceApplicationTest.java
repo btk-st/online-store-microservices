@@ -8,6 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class InventoryServiceApplicationTest {
 
-  @Test
-  void contextLoads() {}
+	@Test
+	void contextLoads() {
+	}
 }

@@ -1,9 +1,20 @@
 package com.onlinestore.inventory.unit.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.onlinestore.inventory.dto.CreateProductRequest;
 import com.onlinestore.inventory.dto.ProductResponse;
@@ -12,199 +23,156 @@ import com.onlinestore.inventory.exception.ProductNotFoundException;
 import com.onlinestore.inventory.mapper.ProductMapper;
 import com.onlinestore.inventory.repository.ProductRepository;
 import com.onlinestore.inventory.service.ProductService;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
 
-  @Mock private ProductRepository productRepository;
+	@Mock
+	private ProductRepository productRepository;
 
-  @Mock private ProductMapper productMapper;
+	@Mock
+	private ProductMapper productMapper;
 
-  @InjectMocks private ProductService productService;
+	@InjectMocks
+	private ProductService productService;
 
-  @Captor private ArgumentCaptor<Product> productCaptor;
+	@Captor
+	private ArgumentCaptor<Product> productCaptor;
 
-  private UUID productId;
-  private Product product;
-  private ProductResponse productResponse;
-  private CreateProductRequest createRequest;
+	private UUID productId;
+	private Product product;
+	private ProductResponse productResponse;
+	private CreateProductRequest createRequest;
 
-  @BeforeEach
-  void setUp() {
-    productId = UUID.randomUUID();
+	@BeforeEach
+	void setUp() {
+		productId = UUID.randomUUID();
 
-    product =
-        Product.builder()
-            .id(productId)
-            .name("MacBook Pro")
-            .price(new BigDecimal("2499.99"))
-            .quantity(10)
-            .sale(new BigDecimal("5.00"))
-            .build();
+		product = Product.builder().id(productId).name("MacBook Pro").price(new BigDecimal("2499.99")).quantity(10)
+				.sale(new BigDecimal("5.00")).build();
 
-    productResponse =
-        ProductResponse.builder()
-            .id(productId)
-            .name("MacBook Pro")
-            .price(new BigDecimal("2499.99"))
-            .quantity(10)
-            .sale(new BigDecimal("5.00"))
-            .build();
+		productResponse = ProductResponse.builder().id(productId).name("MacBook Pro").price(new BigDecimal("2499.99"))
+				.quantity(10).sale(new BigDecimal("5.00")).build();
 
-    createRequest =
-        CreateProductRequest.builder()
-            .name("MacBook Pro")
-            .price(new BigDecimal("2499.99"))
-            .quantity(10)
-            .sale(new BigDecimal("5.00"))
-            .build();
-  }
+		createRequest = CreateProductRequest.builder().name("MacBook Pro").price(new BigDecimal("2499.99")).quantity(10)
+				.sale(new BigDecimal("5.00")).build();
+	}
 
-  @Test
-  void getAllProducts_shouldReturnListOfProductResponses() {
+	@Test
+	void getAllProducts_shouldReturnListOfProductResponses() {
 
-    Product product2 =
-        Product.builder()
-            .id(UUID.randomUUID())
-            .name("iPhone")
-            .price(new BigDecimal("999.99"))
-            .quantity(20)
-            .build();
+		Product product2 = Product.builder().id(UUID.randomUUID()).name("iPhone").price(new BigDecimal("999.99"))
+				.quantity(20).build();
 
-    ProductResponse response2 =
-        ProductResponse.builder()
-            .id(product2.getId())
-            .name("iPhone")
-            .price(new BigDecimal("999.99"))
-            .quantity(20)
-            .build();
+		ProductResponse response2 = ProductResponse.builder().id(product2.getId()).name("iPhone")
+				.price(new BigDecimal("999.99")).quantity(20).build();
 
-    when(productRepository.findAll()).thenReturn(List.of(product, product2));
-    when(productMapper.toResponse(product)).thenReturn(productResponse);
-    when(productMapper.toResponse(product2)).thenReturn(response2);
+		Mockito.when(productRepository.findAll()).thenReturn(List.of(product, product2));
+		Mockito.when(productMapper.toResponse(product)).thenReturn(productResponse);
+		Mockito.when(productMapper.toResponse(product2)).thenReturn(response2);
 
-    List<ProductResponse> result = productService.getAllProducts();
+		List<ProductResponse> result = productService.getAllProducts();
 
-    assertThat(result).hasSize(2).containsExactly(productResponse, response2);
-    verify(productRepository).findAll();
-    verify(productMapper, times(2)).toResponse(any(Product.class));
-  }
+		Assertions.assertThat(result).hasSize(2).containsExactly(productResponse, response2);
+		Mockito.verify(productRepository).findAll();
+		Mockito.verify(productMapper, Mockito.times(2)).toResponse(Mockito.any(Product.class));
+	}
 
-  @Test
-  void getAllProducts_shouldReturnEmptyList_whenNoProducts() {
-    when(productRepository.findAll()).thenReturn(List.of());
+	@Test
+	void getAllProducts_shouldReturnEmptyList_whenNoProducts() {
+		Mockito.when(productRepository.findAll()).thenReturn(List.of());
 
-    List<ProductResponse> result = productService.getAllProducts();
+		List<ProductResponse> result = productService.getAllProducts();
 
-    assertThat(result).isEmpty();
-    verify(productRepository).findAll();
-    verifyNoInteractions(productMapper);
-  }
+		Assertions.assertThat(result).isEmpty();
+		Mockito.verify(productRepository).findAll();
+		Mockito.verifyNoInteractions(productMapper);
+	}
 
-  @Test
-  void getProductById_shouldReturnProductResponse_whenProductExists() {
+	@Test
+	void getProductById_shouldReturnProductResponse_whenProductExists() {
 
-    when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-    when(productMapper.toResponse(product)).thenReturn(productResponse);
+		Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+		Mockito.when(productMapper.toResponse(product)).thenReturn(productResponse);
 
-    ProductResponse result = productService.getProductById(productId);
+		ProductResponse result = productService.getProductById(productId);
 
-    assertThat(result).isEqualTo(productResponse);
-    verify(productRepository).findById(productId);
-    verify(productMapper).toResponse(product);
-  }
+		Assertions.assertThat(result).isEqualTo(productResponse);
+		Mockito.verify(productRepository).findById(productId);
+		Mockito.verify(productMapper).toResponse(product);
+	}
 
-  @Test
-  void getProductById_shouldThrowProductNotFoundException_whenProductNotFound() {
+	@Test
+	void getProductById_shouldThrowProductNotFoundException_whenProductNotFound() {
 
-    when(productRepository.findById(productId)).thenReturn(Optional.empty());
+		Mockito.when(productRepository.findById(productId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> productService.getProductById(productId))
-        .isInstanceOf(ProductNotFoundException.class)
-        .hasMessageContaining(productId.toString());
+		Assertions.assertThatThrownBy(() -> productService.getProductById(productId))
+				.isInstanceOf(ProductNotFoundException.class).hasMessageContaining(productId.toString());
 
-    verify(productRepository).findById(productId);
-    verify(productMapper, never()).toResponse(any());
-  }
+		Mockito.verify(productRepository).findById(productId);
+		Mockito.verify(productMapper, Mockito.never()).toResponse(Mockito.any());
+	}
 
-  @Test
-  void createProduct_shouldSaveProductAndReturnResponse() {
+	@Test
+	void createProduct_shouldSaveProductAndReturnResponse() {
 
-    Product savedProduct =
-        Product.builder()
-            .id(productId)
-            .name("MacBook Pro")
-            .price(new BigDecimal("2499.99"))
-            .quantity(10)
-            .sale(new BigDecimal("5.00"))
-            .build();
+		Product savedProduct = Product.builder().id(productId).name("MacBook Pro").price(new BigDecimal("2499.99"))
+				.quantity(10).sale(new BigDecimal("5.00")).build();
 
-    when(productMapper.toEntity(createRequest)).thenReturn(product);
-    when(productRepository.save(product)).thenReturn(savedProduct);
-    when(productMapper.toResponse(savedProduct)).thenReturn(productResponse);
+		Mockito.when(productMapper.toEntity(createRequest)).thenReturn(product);
+		Mockito.when(productRepository.save(product)).thenReturn(savedProduct);
+		Mockito.when(productMapper.toResponse(savedProduct)).thenReturn(productResponse);
 
-    ProductResponse result = productService.createProduct(createRequest);
+		ProductResponse result = productService.createProduct(createRequest);
 
-    assertThat(result).isEqualTo(productResponse);
-    verify(productMapper).toEntity(createRequest);
-    verify(productRepository).save(product);
-    verify(productMapper).toResponse(savedProduct);
-  }
+		Assertions.assertThat(result).isEqualTo(productResponse);
+		Mockito.verify(productMapper).toEntity(createRequest);
+		Mockito.verify(productRepository).save(product);
+		Mockito.verify(productMapper).toResponse(savedProduct);
+	}
 
-  @Test
-  void deleteProduct_shouldDeleteProduct_whenProductExists() {
+	@Test
+	void deleteProduct_shouldDeleteProduct_whenProductExists() {
 
-    when(productRepository.existsById(productId)).thenReturn(true);
+		Mockito.when(productRepository.existsById(productId)).thenReturn(true);
 
-    productService.deleteProduct(productId);
+		productService.deleteProduct(productId);
 
-    verify(productRepository).existsById(productId);
-    verify(productRepository).deleteById(productId);
-  }
+		Mockito.verify(productRepository).existsById(productId);
+		Mockito.verify(productRepository).deleteById(productId);
+	}
 
-  @Test
-  void deleteProduct_shouldThrowProductNotFoundException_whenProductNotFound() {
+	@Test
+	void deleteProduct_shouldThrowProductNotFoundException_whenProductNotFound() {
 
-    when(productRepository.existsById(productId)).thenReturn(false);
+		Mockito.when(productRepository.existsById(productId)).thenReturn(false);
 
-    assertThatThrownBy(() -> productService.deleteProduct(productId))
-        .isInstanceOf(ProductNotFoundException.class)
-        .hasMessageContaining(productId.toString());
+		Assertions.assertThatThrownBy(() -> productService.deleteProduct(productId))
+				.isInstanceOf(ProductNotFoundException.class).hasMessageContaining(productId.toString());
 
-    verify(productRepository).existsById(productId);
-    verify(productRepository, never()).deleteById(productId);
-  }
+		Mockito.verify(productRepository).existsById(productId);
+		Mockito.verify(productRepository, Mockito.never()).deleteById(productId);
+	}
 
-  @Test
-  void findProductOrThrow_shouldReturnProduct_whenExists() {
+	@Test
+	void findProductOrThrow_shouldReturnProduct_whenExists() {
 
-    when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+		Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
-    productService.getProductById(productId);
+		productService.getProductById(productId);
 
-    verify(productRepository).findById(productId);
-  }
+		Mockito.verify(productRepository).findById(productId);
+	}
 
-  @Test
-  void findProductOrThrow_shouldThrow_whenNotFound() {
+	@Test
+	void findProductOrThrow_shouldThrow_whenNotFound() {
 
-    when(productRepository.findById(productId)).thenReturn(Optional.empty());
+		Mockito.when(productRepository.findById(productId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> productService.getProductById(productId))
-        .isInstanceOf(ProductNotFoundException.class);
+		Assertions.assertThatThrownBy(() -> productService.getProductById(productId))
+				.isInstanceOf(ProductNotFoundException.class);
 
-    verify(productRepository).findById(productId);
-  }
+		Mockito.verify(productRepository).findById(productId);
+	}
 }

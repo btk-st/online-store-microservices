@@ -1,17 +1,20 @@
 package com.onlinestore.inventory.service;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.onlinestore.inventory.dto.CreateProductRequest;
 import com.onlinestore.inventory.dto.ProductResponse;
 import com.onlinestore.inventory.entity.Product;
 import com.onlinestore.inventory.exception.ProductNotFoundException;
 import com.onlinestore.inventory.mapper.ProductMapper;
 import com.onlinestore.inventory.repository.ProductRepository;
-import java.util.List;
-import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -19,49 +22,49 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ProductService {
 
-  private final ProductRepository productRepository;
-  private final ProductMapper productMapper;
+	private final ProductRepository productRepository;
+	private final ProductMapper productMapper;
 
-  public List<ProductResponse> getAllProducts() {
-    log.info("Getting all products");
-    return productRepository.findAll().stream().map(productMapper::toResponse).toList();
-  }
+	public List<ProductResponse> getAllProducts() {
+		log.info("Getting all products");
+		return productRepository.findAll().stream().map(productMapper::toResponse).toList();
+	}
 
-  public ProductResponse getProductById(UUID id) {
-    log.info("Getting product by id: {}", id);
-    Product product = findProductOrThrow(id);
-    return productMapper.toResponse(product);
-  }
+	public ProductResponse getProductById(UUID id) {
+		log.info("Getting product by id: {}", id);
+		Product product = findProductOrThrow(id);
+		return productMapper.toResponse(product);
+	}
 
-  @Transactional
-  public ProductResponse createProduct(CreateProductRequest request) {
-    log.info("Creating new product: {}", request.getName());
+	@Transactional
+	public ProductResponse createProduct(CreateProductRequest request) {
+		log.info("Creating new product: {}", request.getName());
 
-    Product product = productMapper.toEntity(request);
-    Product savedProduct = productRepository.save(product);
+		Product product = productMapper.toEntity(request);
+		Product savedProduct = productRepository.save(product);
 
-    log.info("Product created with id: {}", savedProduct.getId());
-    return productMapper.toResponse(savedProduct);
-  }
+		log.info("Product created with id: {}", savedProduct.getId());
+		return productMapper.toResponse(savedProduct);
+	}
 
-  @Transactional
-  public void deleteProduct(UUID id) {
-    log.info("Deleting product with id: {}", id);
+	@Transactional
+	public void deleteProduct(UUID id) {
+		log.info("Deleting product with id: {}", id);
 
-    if (!productRepository.existsById(id)) {
-      throw new ProductNotFoundException(id);
-    }
+		if (!productRepository.existsById(id)) {
+			throw new ProductNotFoundException(id);
+		}
 
-    productRepository.deleteById(id);
-    log.info("Product deleted: {}", id);
-  }
+		productRepository.deleteById(id);
+		log.info("Product deleted: {}", id);
+	}
 
-  private Product findProductOrThrow(UUID id) {
-    return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
-  }
+	private Product findProductOrThrow(UUID id) {
+		return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+	}
 
-  public Product getProductEntityById(UUID id) {
-    log.info("Getting product entity by id: {}", id);
-    return findProductOrThrow(id);
-  }
+	public Product getProductEntityById(UUID id) {
+		log.info("Getting product entity by id: {}", id);
+		return findProductOrThrow(id);
+	}
 }
