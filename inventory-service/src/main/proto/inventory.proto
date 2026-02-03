@@ -10,12 +10,19 @@ option java_outer_classname = "InventoryProto";
 service InventoryService {
   // Проверить наличие товара
   rpc CheckAvailability (ProductAvailabilityRequest) returns (ProductAvailabilityResponse);
+  // Пакетная проверка наличия товаров
+  rpc BatchCheckAvailability (BatchAvailabilityRequest) returns (BatchAvailabilityResponse);
 }
 
 // ==================== ЗАПРОСЫ ====================
 message ProductAvailabilityRequest {
   string product_id = 1;           // UUID товара
   int32 requested_quantity = 2;    // Запрошенное количество
+}
+
+// Пакетный запрос
+message BatchAvailabilityRequest {
+  repeated ProductAvailabilityRequest requests = 1;  // Список запросов
 }
 
 
@@ -28,5 +35,10 @@ message ProductAvailabilityResponse {
   int32 available_quantity = 5;
   bool is_available = 6;           // Достаточно ли товара?
   string message = 7;              // Сообщение об ошибке или информации
+}
+
+// Пакетный ответ
+message BatchAvailabilityResponse {
+  repeated ProductAvailabilityResponse responses = 1;  // Список ответов
 }
 

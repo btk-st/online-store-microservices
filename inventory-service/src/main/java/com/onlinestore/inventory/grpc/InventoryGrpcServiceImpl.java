@@ -1,5 +1,7 @@
 package com.onlinestore.inventory.grpc;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import com.onlinestore.inventory.entity.Product;
@@ -26,22 +28,9 @@ public class InventoryGrpcServiceImpl extends InventoryServiceGrpc.InventoryServ
 			StreamObserver<ProductAvailabilityResponse> responseObserver) {
 
 		try {
-			UUID productId = UUID.fromString(request.getProductId());
-			int requestedQuantity = request.getRequestedQuantity();
-            
-            log.info("Checking availability of product with id {} ", productId);
-            
-			// Получаем товар
-			Product product = productService.getProductEntityById(productId);
-			ProductAvailabilityResponse response = productMapper.toAvailabilityResponse(product);
+			log.info("Checking availability of product with id {} ", request.getProductId());
 
-			// Проверяем наличие
-			int availableQuantity = product.getQuantity();
-			boolean isAvailable = availableQuantity >= requestedQuantity;
-
-			// Формируем ответ
-			response = response.toBuilder().setIsAvailable(isAvailable)
-					.setMessage(isAvailable ? "Available" : "Insufficient stock").build();
+			ProductAvailabilityResponse response = checkSingleProduct(request);
 
 			responseObserver.onNext(response);
 			responseObserver.onCompleted();
@@ -58,4 +47,46 @@ public class InventoryGrpcServiceImpl extends InventoryServiceGrpc.InventoryServ
 			responseObserver.onError(Status.INTERNAL.withDescription("Internal error").asRuntimeException());
 		}
 	}
+
+	@Override
+	public void batchCheckAvailability(BatchAvailabilityRequest request,
+			StreamObserver<BatchAvailabilityResponse> responseObserver) {
+		log.info("Checking availability of batch products");
+
+		List<ProductAvailabilityResponse> responses = new ArrayList<>();
+		for (ProductAvailabilityRequest productAvailabilityRequest : request.getRequestsList()) {
+			try {
+				ProductAvailabilityResponse response = checkSingleProduct(productAvailabilityRequest);
+				responses.add(response);
+			} catch (ProductNotFoundException | IllegalArgumentException e) {
+				ProductAvailabilityResponse response = productMapper
+						.toFailedAvailabilityResponse(productAvailabilityRequest.getProductId());
+				responses.add(response);
+			}
+		}
+
+		BatchAvailabilityResponse batchResponse = BatchAvailabilityResponse.newBuilder().addAllResponses(responses)
+				.build();
+
+		responseObserver.onNext(batchResponse);
+		responseObserver.onCompleted();
+	}
+
+	private ProductAvailabilityResponse checkSingleProduct(ProductAvailabilityRequest request) {
+		UUID productId = UUID.fromString(request.getProductId());
+		int requestedQuantity = request.getRequestedQuantity();
+
+		// Получаем товар
+		Product product = productService.getProductEntityById(productId);
+		ProductAvailabilityResponse response = productMapper.toAvailabilityResponse(product);
+
+		// Проверяем наличие
+		int availableQuantity = product.getQuantity();
+		boolean isAvailable = availableQuantity >= requestedQuantity;
+
+		// Формируем ответ
+		return response.toBuilder().setIsAvailable(isAvailable)
+				.setMessage(isAvailable ? "Available" : "Insufficient stock").build();
+	}
+
 }
