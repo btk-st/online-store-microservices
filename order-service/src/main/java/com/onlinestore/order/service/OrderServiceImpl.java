@@ -18,6 +18,7 @@ import com.onlinestore.order.mapper.OrderMapper;
 import com.onlinestore.order.repository.OrderRepository;
 import com.onlinestore.order.repository.UserRepository;
 import com.onlinestore.order.service.api.OrderService;
+import com.onlinestore.order.service.api.TransactionalOutboxService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderRepository orderRepository;
 	private final UserRepository userRepository;
 	private final InventoryGrpcClient inventoryClient;
-	private final TransactionalOutboxServiceImpl transactionalOutboxService;
+	private final TransactionalOutboxService transactionalOutboxService;
 	private final OrderKafkaProducer orderKafkaProducer;
 	private final OrderMapper orderMapper;
 	private final OrderItemMapper orderItemMapper;
