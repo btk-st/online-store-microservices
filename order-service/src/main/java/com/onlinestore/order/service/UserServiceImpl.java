@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,12 +11,13 @@ import org.springframework.stereotype.Service;
 import com.onlinestore.order.dto.UpdateUserRequest;
 import com.onlinestore.order.entity.User;
 import com.onlinestore.order.repository.UserRepository;
+import com.onlinestore.order.service.api.UserService;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class UserService implements UserDetailsService {
+public class UserServiceImpl implements UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
@@ -28,15 +28,18 @@ public class UserService implements UserDetailsService {
 				.orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 	}
 
+	@Override
 	public User getUserById(UUID userId) {
 		return userRepository.findById(userId)
 				.orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
 	}
 
+	@Override
 	public List<User> getAllUsers() {
 		return userRepository.findAll();
 	}
 
+	@Override
 	public User updateUser(UUID userId, UpdateUserRequest request) {
 		User user = getUserById(userId);
 
@@ -65,6 +68,7 @@ public class UserService implements UserDetailsService {
 		return userRepository.save(user);
 	}
 
+	@Override
 	public void deleteUser(UUID userId) {
 		if (!userRepository.existsById(userId)) {
 			throw new UsernameNotFoundException("User not found with id: " + userId);

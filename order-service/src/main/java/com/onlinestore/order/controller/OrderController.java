@@ -14,7 +14,7 @@ import com.onlinestore.order.controller.api.OrderApi;
 import com.onlinestore.order.dto.CreateOrderRequest;
 import com.onlinestore.order.dto.OrderResponse;
 import com.onlinestore.order.entity.User;
-import com.onlinestore.order.service.OrderService;
+import com.onlinestore.order.service.api.OrderService;
 
 import lombok.RequiredArgsConstructor;
 

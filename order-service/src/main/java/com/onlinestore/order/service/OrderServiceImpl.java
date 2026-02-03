@@ -17,6 +17,7 @@ import com.onlinestore.order.mapper.OrderItemMapper;
 import com.onlinestore.order.mapper.OrderMapper;
 import com.onlinestore.order.repository.OrderRepository;
 import com.onlinestore.order.repository.UserRepository;
+import com.onlinestore.order.service.api.OrderService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,17 +25,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OrderService {
+public class OrderServiceImpl implements OrderService {
 
 	private final OrderRepository orderRepository;
 	private final UserRepository userRepository;
 	private final InventoryGrpcClient inventoryClient;
-	private final TransactionalOutboxService transactionalOutboxService;
+	private final TransactionalOutboxServiceImpl transactionalOutboxService;
 	private final OrderKafkaProducer orderKafkaProducer;
 	private final OrderMapper orderMapper;
 	private final OrderItemMapper orderItemMapper;
 
 	@Transactional
+	@Override
 	public OrderResponse createOrder(UUID userId, CreateOrderRequest request) {
 		log.info("Creating order for user: {}", userId);
 

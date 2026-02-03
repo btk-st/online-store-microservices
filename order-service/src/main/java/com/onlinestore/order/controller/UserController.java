@@ -20,7 +20,7 @@ import com.onlinestore.order.controller.api.UserApi;
 import com.onlinestore.order.dto.UpdateUserRequest;
 import com.onlinestore.order.dto.UserResponse;
 import com.onlinestore.order.entity.User;
-import com.onlinestore.order.service.UserService;
+import com.onlinestore.order.service.api.UserService;
 
 import lombok.RequiredArgsConstructor;
 

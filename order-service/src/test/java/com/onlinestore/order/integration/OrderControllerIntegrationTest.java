@@ -3,6 +3,7 @@ package com.onlinestore.order.integration;
 import java.util.List;
 import java.util.UUID;
 
+import com.onlinestore.order.service.api.TransactionalOutboxService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +31,7 @@ import com.onlinestore.order.exception.ProductNotAvailableException;
 import com.onlinestore.order.kafka.OrderCreatedEvent;
 import com.onlinestore.order.repository.OrderRepository;
 import com.onlinestore.order.repository.UserRepository;
-import com.onlinestore.order.service.TransactionalOutboxService;
+import com.onlinestore.order.service.TransactionalOutboxServiceImpl;
 
 @SpringBootTest
 @AutoConfigureMockMvc

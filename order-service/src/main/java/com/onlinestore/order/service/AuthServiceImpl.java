@@ -7,17 +7,19 @@ import com.onlinestore.order.dto.RegisterRequest;
 import com.onlinestore.order.entity.User;
 import com.onlinestore.order.mapper.UserMapper;
 import com.onlinestore.order.repository.UserRepository;
+import com.onlinestore.order.service.api.AuthService;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AuthServiceImpl implements AuthService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final UserMapper userMapper;
 
+	@Override
 	public User register(RegisterRequest request) {
 		if (userRepository.existsByUsername(request.getUsername())) {
 			throw new IllegalArgumentException("Username already exists");

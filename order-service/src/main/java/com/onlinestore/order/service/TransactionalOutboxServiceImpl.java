@@ -15,6 +15,7 @@ import com.onlinestore.order.entity.OutboxEvent;
 import com.onlinestore.order.kafka.OrderCreatedEvent;
 import com.onlinestore.order.mapper.OrderMapper;
 import com.onlinestore.order.repository.OutboxEventRepository;
+import com.onlinestore.order.service.api.TransactionalOutboxService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
-public class TransactionalOutboxService {
+public class TransactionalOutboxServiceImpl implements TransactionalOutboxService {
 
 	private final OutboxEventRepository outboxRepository;
 	private final ObjectMapper objectMapper;

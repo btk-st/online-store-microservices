@@ -18,8 +18,8 @@ import com.onlinestore.order.dto.LoginRequest;
 import com.onlinestore.order.dto.RegisterRequest;
 import com.onlinestore.order.entity.User;
 import com.onlinestore.order.security.JwtService;
-import com.onlinestore.order.service.AuthService;
-import com.onlinestore.order.service.UserService;
+import com.onlinestore.order.service.api.AuthService;
+import com.onlinestore.order.service.api.UserService;
 
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
