@@ -28,7 +28,9 @@ public class InventoryGrpcServiceImpl extends InventoryServiceGrpc.InventoryServ
 		try {
 			UUID productId = UUID.fromString(request.getProductId());
 			int requestedQuantity = request.getRequestedQuantity();
-
+            
+            log.info("Checking availability of product with id {} ", productId);
+            
 			// Получаем товар
 			Product product = productService.getProductEntityById(productId);
 			ProductAvailabilityResponse response = productMapper.toAvailabilityResponse(product);
