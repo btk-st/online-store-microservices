@@ -6,19 +6,19 @@ import java.util.Map;
 import java.util.function.Function;
 import javax.crypto.SecretKey;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class JwtService {
 
-    private final JwtProperties jwtProperties;
+	private final JwtProperties jwtProperties;
 
 	private SecretKey getSigningKey() {
 		return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
@@ -31,7 +31,8 @@ public class JwtService {
 	public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
 		return Jwts.builder().claims(extraClaims).subject(userDetails.getUsername())
 				.issuedAt(new Date(System.currentTimeMillis()))
-				.expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration())).signWith(getSigningKey()).compact();
+				.expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration()))
+				.signWith(getSigningKey()).compact();
 	}
 
 	public boolean isTokenValid(String token, UserDetails userDetails) {
