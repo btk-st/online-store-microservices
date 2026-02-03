@@ -6,10 +6,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.onlinestore.order.dto.CreateOrderRequest;
+import com.onlinestore.order.dto.CreateOrderRequest.OrderItemRequest;
 import com.onlinestore.order.dto.OrderResponse;
 import com.onlinestore.order.entity.Order;
 import com.onlinestore.order.entity.OrderItem;
 import com.onlinestore.order.entity.User;
+import com.onlinestore.order.exception.ProductNotAvailableException;
+import com.onlinestore.order.grpc.BatchAvailabilityResponse;
 import com.onlinestore.order.grpc.InventoryGrpcClient;
 import com.onlinestore.order.grpc.ProductAvailabilityResponse;
 import com.onlinestore.order.kafka.OrderKafkaProducer;
@@ -41,38 +44,40 @@ public class OrderServiceImpl implements OrderService {
 	public OrderResponse createOrder(UUID userId, CreateOrderRequest request) {
 		log.info("Creating order for user: {}", userId);
 
-		// 1. Находим пользователя
+		// Находим пользователя
 		User user = userRepository.findById(userId)
 				.orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
-		// 2. Проверяем что userId в запросе совпадает с аутентифицированным
+		// Проверяем что userId в запросе совпадает с аутентифицированным
 		if (!userId.equals(request.getUserId())) {
 			throw new IllegalArgumentException("User ID mismatch");
 		}
 
-		// 3. Создаем заказ
+		// Создаем заказ
 		Order order = Order.builder().user(user).build();
 
-		// 4. Добавляем товары с проверкой доступности
-		for (CreateOrderRequest.OrderItemRequest itemRequest : request.getItems()) {
-			// Проверяем наличие через gRPC
-			ProductAvailabilityResponse availability = inventoryClient
-					.checkAvailabilityOrThrow(itemRequest.getProductId(), itemRequest.getQuantity());
+		BatchAvailabilityResponse response = inventoryClient.batchCheckAvailability(request);
 
-			// Создаем OrderItem с актуальной информацией
-			OrderItem orderItem = orderItemMapper.toOrderItem(order, itemRequest, availability);
-
+		// полагаемся на очередность итемов запроса = очередность ответа
+		for (int i = 0; i < response.getResponsesCount(); i++) {
+			ProductAvailabilityResponse curResponse = response.getResponses(i);
+			OrderItemRequest curItemRequest = request.getItems().get(i);
+			if (!curResponse.getIsAvailable()) {
+				throw new ProductNotAvailableException(UUID.fromString(curResponse.getProductId()),
+						curItemRequest.getQuantity(), curResponse.getAvailableQuantity(), curResponse.getMessage());
+			}
+			OrderItem orderItem = orderItemMapper.toOrderItem(order, curItemRequest, curResponse);
 			order.addItem(orderItem);
 		}
 
-		// 6. Сохраняем заказ
+		// Сохраняем заказ
 		Order savedOrder = orderRepository.save(order);
 
-		// 7. Отправляем в аутбокс
+		// Отправляем в аутбокс
 		transactionalOutboxService.saveOrderCreatedEvent(savedOrder);
 
-		// 8. Отправляем в кафку (мб с ошибкой, заказ все равно будет сделан + сохранен
-		// в аутбокс
+		// Отправляем в кафку (мб с ошибкой, заказ все равно будет сделан + сохранен в
+		// аутбокс
 		orderKafkaProducer.sendOrderCreated(savedOrder);
 
 		log.info("Order created successfully: {}", savedOrder.getId());

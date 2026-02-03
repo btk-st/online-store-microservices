@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,7 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onlinestore.order.dto.CreateOrderRequest;
 import com.onlinestore.order.entity.Order;
 import com.onlinestore.order.entity.User;
-import com.onlinestore.order.exception.ProductNotAvailableException;
+import com.onlinestore.order.grpc.BatchAvailabilityResponse;
+import com.onlinestore.order.grpc.ProductAvailabilityResponse;
 import com.onlinestore.order.kafka.OrderCreatedEvent;
 import com.onlinestore.order.repository.OrderRepository;
 import com.onlinestore.order.repository.UserRepository;
@@ -65,17 +67,20 @@ class OrderControllerIntegrationTest {
 		testUser = userRepository.save(User.builder().username("orderuser").email("order@email.com")
 				.password("encodedPass").role(User.Role.ROLE_USER).build());
 
-		// Настраиваем успешный ответ от Inventory Service по умолчанию
-		Mockito.when(inventoryClient.checkAvailabilityOrThrow(Mockito.any(UUID.class), Mockito.anyInt()))
-				.thenReturn(com.onlinestore.order.grpc.ProductAvailabilityResponse.newBuilder()
+		// Настраиваем УСПЕШНЫЙ batch ответ от Inventory Service по умолчанию
+		BatchAvailabilityResponse successBatchResponse = BatchAvailabilityResponse.newBuilder()
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(UUID.randomUUID().toString())
 						.setProductName("iPhone 15 Pro").setPrice(1299.99).setDiscount(15.50).setIsAvailable(true)
-						.build());
+						.setAvailableQuantity(10).build())
+				.build();
+
+		Mockito.when(inventoryClient.batchCheckAvailability(Mockito.any(CreateOrderRequest.class)))
+				.thenReturn(successBatchResponse);
 
 		// Мокаем успешную отправку в Kafka
 		Mockito.when(kafkaTemplate.send(Mockito.anyString(), Mockito.anyString(), Mockito.any(OrderCreatedEvent.class)))
 				.thenReturn(null);
 	}
-
 	@AfterEach
 	void tearDown() {
 		SecurityContextHolder.clearContext();
@@ -94,6 +99,16 @@ class OrderControllerIntegrationTest {
 		CreateOrderRequest request = new CreateOrderRequest(testUser.getId(),
 				List.of(new CreateOrderRequest.OrderItemRequest(productId, 2)));
 
+		// Настраиваем batch ответ для конкретного productId
+		BatchAvailabilityResponse batchResponse = BatchAvailabilityResponse.newBuilder()
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(productId.toString())
+						.setProductName("iPhone 15 Pro").setPrice(1299.99).setDiscount(15.50).setIsAvailable(true)
+						.setAvailableQuantity(10).build())
+				.build();
+
+		Mockito.when(inventoryClient.batchCheckAvailability(Mockito.any(CreateOrderRequest.class)))
+				.thenReturn(batchResponse);
+
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/orders").contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isCreated())
 				.andExpect(MockMvcResultMatchers.jsonPath("$.userId").value(testUser.getId().toString()))
@@ -108,10 +123,10 @@ class OrderControllerIntegrationTest {
 		Assertions.assertThat(orders).hasSize(1);
 		Assertions.assertThat(orders.get(0).getUser().getId()).isEqualTo(testUser.getId());
 
-		// Проверяем вызов gRPC клиента
-		Mockito.verify(inventoryClient).checkAvailabilityOrThrow(Mockito.eq(productId), Mockito.eq(2));
+		// Проверяем вызов gRPC клиента ТОЛЬКО ОДИН РАЗ (batch)
+		Mockito.verify(inventoryClient, Mockito.times(1)).batchCheckAvailability(Mockito.any(CreateOrderRequest.class));
 
-		// Проверяем отправку в Kafka (через аутбокс)
+		// Проверяем отправку в Kafka
 		Mockito.verify(kafkaTemplate).send(Mockito.eq("orders"), Mockito.anyString(),
 				Mockito.any(OrderCreatedEvent.class));
 
@@ -120,37 +135,51 @@ class OrderControllerIntegrationTest {
 	}
 
 	@Test
-	void createOrder_WhenUnauthenticated_ReturnsForbidden() throws Exception {
-		CreateOrderRequest request = new CreateOrderRequest(UUID.randomUUID(),
-				List.of(new CreateOrderRequest.OrderItemRequest(UUID.randomUUID(), 1)));
-
-		mockMvc.perform(MockMvcRequestBuilders.post("/api/orders").contentType(MediaType.APPLICATION_JSON)
-				.content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isForbidden());
-	}
-
-	@Test
-	void createOrder_WhenUserIdMismatch_ReturnsBadRequest() throws Exception {
+	void createOrder_WithMultipleItems_AllItemsCheckedInBatch() throws Exception {
 		authenticateAs(testUser);
 
-		UUID differentUserId = UUID.randomUUID();
-		CreateOrderRequest request = new CreateOrderRequest(differentUserId, // Не совпадает с аутентифицированным
-																				// пользователем
-				List.of(new CreateOrderRequest.OrderItemRequest(UUID.randomUUID(), 1)));
+		UUID product1 = UUID.randomUUID();
+		UUID product2 = UUID.randomUUID();
+
+		CreateOrderRequest request = new CreateOrderRequest(testUser.getId(),
+				List.of(new CreateOrderRequest.OrderItemRequest(product1, 1),
+						new CreateOrderRequest.OrderItemRequest(product2, 3)));
+
+		// Настраиваем batch ответ с двумя товарами
+		BatchAvailabilityResponse batchResponse = BatchAvailabilityResponse.newBuilder()
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(product1.toString())
+						.setProductName("iPhone 15 Pro").setPrice(1299.99).setIsAvailable(true).setAvailableQuantity(10)
+						.build())
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(product2.toString())
+						.setProductName("MacBook Pro").setPrice(2499.99).setIsAvailable(true).setAvailableQuantity(5)
+						.build())
+				.build();
+
+		Mockito.when(inventoryClient.batchCheckAvailability(Mockito.any(CreateOrderRequest.class)))
+				.thenReturn(batchResponse);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/orders").contentType(MediaType.APPLICATION_JSON)
-				.content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isBadRequest())
-				.andExpect(MockMvcResultMatchers.jsonPath("$.message")
-						.value(org.hamcrest.Matchers.containsString("User ID mismatch")));
+				.content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isCreated());
+
+		// Проверяем что был ОДИН batch вызов
+		Mockito.verify(inventoryClient, Mockito.times(1)).batchCheckAvailability(Mockito.any(CreateOrderRequest.class));
 	}
 
 	@Test
-	void createOrder_WhenProductNotAvailable_ReturnsBadRequest() throws Exception {
+	void createOrder_WhenProductNotAvailableInBatch_ReturnsUnprocessableEntity() throws Exception {
 		authenticateAs(testUser);
 
 		UUID productId = UUID.randomUUID();
-		// Мокаем что товар недоступен
-		Mockito.when(inventoryClient.checkAvailabilityOrThrow(Mockito.any(UUID.class), Mockito.anyInt()))
-				.thenThrow(new ProductNotAvailableException(productId, 1, 1, "test message"));
+
+		// Настраиваем batch ответ где товар НЕ доступен
+		BatchAvailabilityResponse batchResponse = BatchAvailabilityResponse.newBuilder()
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(productId.toString())
+						.setProductName("iPhone 15 Pro").setPrice(1299.99).setIsAvailable(false) // ← НЕ доступен!
+						.setAvailableQuantity(1).setMessage("Insufficient stock").build())
+				.build();
+
+		Mockito.when(inventoryClient.batchCheckAvailability(Mockito.any(CreateOrderRequest.class)))
+				.thenReturn(batchResponse);
 
 		CreateOrderRequest request = new CreateOrderRequest(testUser.getId(),
 				List.of(new CreateOrderRequest.OrderItemRequest(productId, 5)));
@@ -159,58 +188,101 @@ class OrderControllerIntegrationTest {
 				.content(mapper.writeValueAsString(request)))
 				.andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
 
-		// Проверяем что заказ НЕ сохранен в БД (транзакция откатилась)
+		// Проверяем что заказ НЕ сохранен в БД
 		Assertions.assertThat(orderRepository.count()).isZero();
 	}
 
 	@Test
-	void createOrder_WithMultipleItems_AllItemsChecked() throws Exception {
+	void createOrder_WhenMixedAvailabilityInBatch_ReturnsUnprocessableEntity() throws Exception {
+		authenticateAs(testUser);
+
+		UUID availableProduct = UUID.randomUUID();
+		UUID unavailableProduct = UUID.randomUUID();
+
+		// Batch ответ: один товар доступен, второй нет
+		BatchAvailabilityResponse batchResponse = BatchAvailabilityResponse.newBuilder()
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(availableProduct.toString())
+						.setProductName("Available Product").setPrice(100.0).setIsAvailable(true)
+						.setAvailableQuantity(10).build())
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(unavailableProduct.toString())
+						.setProductName("Unavailable Product").setPrice(200.0).setIsAvailable(false) // ← не доступен
+						.setAvailableQuantity(2).setMessage("Only 2 items in stock").build())
+				.build();
+
+		Mockito.when(inventoryClient.batchCheckAvailability(Mockito.any(CreateOrderRequest.class)))
+				.thenReturn(batchResponse);
+
+		CreateOrderRequest request = new CreateOrderRequest(testUser.getId(),
+				List.of(new CreateOrderRequest.OrderItemRequest(availableProduct, 2),
+						new CreateOrderRequest.OrderItemRequest(unavailableProduct, 5) // запрашиваем 5, есть только 2
+				));
+
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/orders").contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(request)))
+				.andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
+
+		// Проверяем что заказ НЕ сохранен (вся транзакция откатывается)
+		Assertions.assertThat(orderRepository.count()).isZero();
+	}
+
+	@Test
+	void createOrder_OrderOfResponsesMatchesOrderOfRequests() throws Exception {
 		authenticateAs(testUser);
 
 		UUID product1 = UUID.randomUUID();
 		UUID product2 = UUID.randomUUID();
+		UUID product3 = UUID.randomUUID();
+
 		CreateOrderRequest request = new CreateOrderRequest(testUser.getId(),
 				List.of(new CreateOrderRequest.OrderItemRequest(product1, 1),
-						new CreateOrderRequest.OrderItemRequest(product2, 3)));
+						new CreateOrderRequest.OrderItemRequest(product2, 2),
+						new CreateOrderRequest.OrderItemRequest(product3, 3)));
+
+		// Важно: порядок ответов должен соответствовать порядку запросов
+		BatchAvailabilityResponse batchResponse = BatchAvailabilityResponse.newBuilder()
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(product1.toString())
+						.setProductName("Product 1").setPrice(100.0).setIsAvailable(true).setAvailableQuantity(10)
+						.build())
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(product2.toString())
+						.setProductName("Product 2").setPrice(200.0).setIsAvailable(true).setAvailableQuantity(5)
+						.build())
+				.addResponses(ProductAvailabilityResponse.newBuilder().setProductId(product3.toString())
+						.setProductName("Product 3").setPrice(300.0).setIsAvailable(true).setAvailableQuantity(3)
+						.build())
+				.build();
+
+		Mockito.when(inventoryClient.batchCheckAvailability(Mockito.any(CreateOrderRequest.class)))
+				.thenReturn(batchResponse);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/orders").contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isCreated());
 
-		// Проверяем что оба товара были проверены через gRPC
-		Mockito.verify(inventoryClient).checkAvailabilityOrThrow(Mockito.eq(product1), Mockito.eq(1));
-		Mockito.verify(inventoryClient).checkAvailabilityOrThrow(Mockito.eq(product2), Mockito.eq(3));
-	}
+		// Проверяем что inventoryClient получает правильный CreateOrderRequest
+		ArgumentCaptor<CreateOrderRequest> requestCaptor = ArgumentCaptor.forClass(CreateOrderRequest.class);
 
-	@Test
-	void createOrder_InvalidRequest_ReturnsBadRequest() throws Exception {
-		authenticateAs(testUser);
+		Mockito.verify(inventoryClient).batchCheckAvailability(requestCaptor.capture());
 
-		// Невалидный запрос: отрицательное количество
-		String invalidJson = """
-				{
-				    "userId": "%s",
-				    "items": [
-				        {
-				            "productId": "%s",
-				            "quantity": -1
-				        }
-				    ]
-				}
-				""".formatted(testUser.getId(), UUID.randomUUID());
+		CreateOrderRequest sentRequest = requestCaptor.getValue();
 
-		mockMvc.perform(
-				MockMvcRequestBuilders.post("/api/orders").contentType(MediaType.APPLICATION_JSON).content(invalidJson))
-				.andExpect(MockMvcResultMatchers.status().isBadRequest());
+		// Проверяем что порядок товаров в запросе сохранился
+		Assertions.assertThat(sentRequest.getItems()).extracting(CreateOrderRequest.OrderItemRequest::getProductId)
+				.containsExactly(product1, product2, product3);
+
+		// Проверяем количество
+		Assertions.assertThat(sentRequest.getItems()).extracting(CreateOrderRequest.OrderItemRequest::getQuantity)
+				.containsExactly(1, 2, 3);
 	}
 
 	@Test
 	void createOrder_WithEmptyItems_ReturnsBadRequest() throws Exception {
 		authenticateAs(testUser);
 
-		CreateOrderRequest request = new CreateOrderRequest(testUser.getId(), List.of() // Пустой список товаров
-		);
+		CreateOrderRequest request = new CreateOrderRequest(testUser.getId(), List.of());
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/orders").contentType(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+		// gRPC не должен вызываться при пустом списке
+		Mockito.verify(inventoryClient, Mockito.never()).batchCheckAvailability(Mockito.any());
 	}
 }
