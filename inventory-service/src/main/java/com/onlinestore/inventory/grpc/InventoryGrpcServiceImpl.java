@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.onlinestore.inventory.entity.Product;
 import com.onlinestore.inventory.exception.ProductNotFoundException;
 import com.onlinestore.inventory.mapper.ProductMapper;
-import com.onlinestore.inventory.service.ProductService;
+import com.onlinestore.inventory.service.api.ProductService;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;

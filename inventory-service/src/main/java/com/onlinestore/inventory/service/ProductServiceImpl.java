@@ -12,6 +12,7 @@ import com.onlinestore.inventory.entity.Product;
 import com.onlinestore.inventory.exception.ProductNotFoundException;
 import com.onlinestore.inventory.mapper.ProductMapper;
 import com.onlinestore.inventory.repository.ProductRepository;
+import com.onlinestore.inventory.service.api.ProductService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,16 +21,18 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ProductService {
+public class ProductServiceImpl implements ProductService {
 
 	private final ProductRepository productRepository;
 	private final ProductMapper productMapper;
 
+	@Override
 	public List<ProductResponse> getAllProducts() {
 		log.info("Getting all products");
 		return productRepository.findAll().stream().map(productMapper::toResponse).toList();
 	}
 
+	@Override
 	public ProductResponse getProductById(UUID id) {
 		log.info("Getting product by id: {}", id);
 		Product product = findProductOrThrow(id);
@@ -37,6 +40,7 @@ public class ProductService {
 	}
 
 	@Transactional
+	@Override
 	public ProductResponse createProduct(CreateProductRequest request) {
 		log.info("Creating new product: {}", request.getName());
 
@@ -48,6 +52,7 @@ public class ProductService {
 	}
 
 	@Transactional
+	@Override
 	public void deleteProduct(UUID id) {
 		log.info("Deleting product with id: {}", id);
 
@@ -59,12 +64,13 @@ public class ProductService {
 		log.info("Product deleted: {}", id);
 	}
 
-	private Product findProductOrThrow(UUID id) {
-		return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
-	}
-
+	@Override
 	public Product getProductEntityById(UUID id) {
 		log.info("Getting product entity by id: {}", id);
 		return findProductOrThrow(id);
+	}
+
+	private Product findProductOrThrow(UUID id) {
+		return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
 	}
 }

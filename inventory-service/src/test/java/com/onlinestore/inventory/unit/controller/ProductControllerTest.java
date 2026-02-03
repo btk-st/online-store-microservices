@@ -25,7 +25,7 @@ import com.onlinestore.inventory.dto.CreateProductRequest;
 import com.onlinestore.inventory.dto.ProductResponse;
 import com.onlinestore.inventory.exception.GlobalExceptionHandler;
 import com.onlinestore.inventory.exception.ProductNotFoundException;
-import com.onlinestore.inventory.service.ProductService;
+import com.onlinestore.inventory.service.ProductServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class ProductControllerTest {
@@ -34,7 +34,7 @@ class ProductControllerTest {
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Mock
-	private ProductService productService;
+	private ProductServiceImpl productService;
 
 	@InjectMocks
 	private ProductController productController;

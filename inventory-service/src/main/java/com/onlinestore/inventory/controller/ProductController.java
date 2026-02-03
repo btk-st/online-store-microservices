@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.onlinestore.inventory.controller.api.ProductApi;
 import com.onlinestore.inventory.dto.CreateProductRequest;
 import com.onlinestore.inventory.dto.ProductResponse;
-import com.onlinestore.inventory.service.ProductService;
+import com.onlinestore.inventory.service.api.ProductService;
 
 import lombok.RequiredArgsConstructor;
 

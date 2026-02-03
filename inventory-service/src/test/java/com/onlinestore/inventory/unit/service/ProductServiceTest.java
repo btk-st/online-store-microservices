@@ -22,7 +22,7 @@ import com.onlinestore.inventory.entity.Product;
 import com.onlinestore.inventory.exception.ProductNotFoundException;
 import com.onlinestore.inventory.mapper.ProductMapper;
 import com.onlinestore.inventory.repository.ProductRepository;
-import com.onlinestore.inventory.service.ProductService;
+import com.onlinestore.inventory.service.ProductServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
@@ -34,7 +34,7 @@ class ProductServiceTest {
 	private ProductMapper productMapper;
 
 	@InjectMocks
-	private ProductService productService;
+	private ProductServiceImpl productService;
 
 	@Captor
 	private ArgumentCaptor<Product> productCaptor;
