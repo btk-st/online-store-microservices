@@ -40,8 +40,10 @@ spring:
       port: 6379
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-NO_TRACE}] [%X{spanId:-NO_SPAN}] [%X{parentSpanId:-NO_PARENT_SPAN}] %-5level [%thread] %logger{36} - %msg%n"
   level:
-    com.onlinestore.notification: DEBUG
+    com.onlinestore.notification: TRACE
     org.hibernate.SQL: DEBUG
     org.hibernate.type: TRACE
 

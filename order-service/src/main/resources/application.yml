@@ -30,6 +30,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
+        interceptor.classes: com.onlinestore.order.tracing.KafkaProducerInterceptor
         spring.json.type.mapping: orderCreated:com.onlinestore.order.kafka.OrderCreatedEvent
 
 # gRPC Configuration
