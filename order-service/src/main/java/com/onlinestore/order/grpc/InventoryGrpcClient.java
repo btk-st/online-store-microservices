@@ -18,7 +18,7 @@ public class InventoryGrpcClient {
 
 	@GrpcClient("inventory-service")
 	private InventoryServiceGrpc.InventoryServiceBlockingStub inventoryStub;
-	private OrderItemMapper orderItemMapper;
+	private final OrderItemMapper orderItemMapper;
 
 	public BatchAvailabilityResponse batchCheckAvailability(CreateOrderRequest createOrderRequest) {
 		log.info("Checking availability for {} items", createOrderRequest.getItems().size());

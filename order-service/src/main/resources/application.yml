@@ -47,11 +47,6 @@ jwt:
   secret: "your-256-bit-secret-change-this-in-production-minimum-32-chars"
   expiration: 86400000  # 24 hours in milliseconds
 
-# Security
-security:
-  jwt:
-    secret: ${jwt.secret}
-    expiration: ${jwt.expiration}
 
 # Actuator
 management:
@@ -65,7 +60,9 @@ management:
 
 # Logging
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-NO_TRACE}] [%X{spanId:-NO_SPAN}] [%X{parentSpanId:-NO_PARENT_SPAN}] %-5level [%thread] %logger{36} - %msg%n"
   level:
-    com.onlinestore.order: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.kafka: DEBUG
+    com.onlinestore.order: TRACE
+    org.springframework.security: WARN
+    org.springframework.kafka: WARN
