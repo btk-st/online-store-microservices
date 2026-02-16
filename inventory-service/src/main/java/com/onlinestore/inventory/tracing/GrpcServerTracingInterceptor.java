@@ -11,9 +11,41 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * gRPC интерсептор для распределенной трассировки запросов.
+ * <p>
+ * Добавляет сквозную трассировку путем передачи traceId через метаданные gRPC.
+ * Логика работы:
+ * <ol>
+ * <li>Извлекает traceId из метаданных (переданный от клиента)</li>
+ * <li>Если traceId отсутствует (прямой вызов), генерирует новый</li>
+ * <li>Генерирует spanId для текущего вызова</li>
+ * <li>Устанавливает все ID в MDC для логирования</li>
+ * <li>Очищает MDC после завершения вызова (onComplete/onCancel)</li>
+ * </ol>
+ * </p>
+ *
+ * <p>
+ * Ожидаемые метаданные от клиента:
+ * <ul>
+ * <li>{@code traceId} - идентификатор всей цепочки вызовов</li>
+ * <li>{@code spanId} - идентификатор предыдущего вызова (parentSpanId)</li>
+ * </ul>
+ * </p>
+ */
 @Slf4j
 public class GrpcServerTracingInterceptor implements ServerInterceptor {
-
+	/**
+	 * Перехватывает gRPC вызов и добавляет трассировочную информацию.
+	 * 
+	 * @param serverCall
+	 *            объект вызова
+	 * @param metadata
+	 *            метаданные запроса
+	 * @param serverCallHandler
+	 *            обработчик вызова
+	 * @return listener с очисткой MDC после завершения
+	 */
 	@Override
 	public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata metadata,
 			ServerCallHandler<ReqT, RespT> serverCallHandler) {

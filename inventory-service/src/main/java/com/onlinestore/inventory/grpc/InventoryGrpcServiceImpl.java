@@ -15,6 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 
+/**
+ * gRPC сервис для проверки наличия товаров на складе. Обрабатывает запросы от
+ * других микросервисов через протокол gRPC.
+ */
 @Slf4j
 @GrpcService
 @RequiredArgsConstructor
@@ -23,6 +27,14 @@ public class InventoryGrpcServiceImpl extends InventoryServiceGrpc.InventoryServ
 	private final ProductService productService;
 	private final ProductMapper productMapper;
 
+	/**
+	 * Проверяет наличие нужного количества одиночного товара на складе
+	 * 
+	 * @param request
+	 *            gRPC запрос, содержащий id товара и требуемое количество.
+	 * @param responseObserver
+	 *            объект для отправки ответа обратно клиенту
+	 */
 	@Override
 	public void checkAvailability(ProductAvailabilityRequest request,
 			StreamObserver<ProductAvailabilityResponse> responseObserver) {
@@ -48,6 +60,17 @@ public class InventoryGrpcServiceImpl extends InventoryServiceGrpc.InventoryServ
 		}
 	}
 
+	/**
+	 * Пакетная проверка наличия нескольких товаров. Для каждого товара в запросе
+	 * возвращается отдельный ответ. Если какой-то товар не найден или количество
+	 * товара на складе меньше запрашиваемого, в ответе для него будет isAvailable =
+	 * false.
+	 * 
+	 * @param request
+	 *            список товаров с требуемым количеством для проверки.
+	 * @param responseObserver
+	 *            объект для отправки ответа клиенту.
+	 */
 	@Override
 	public void batchCheckAvailability(BatchAvailabilityRequest request,
 			StreamObserver<BatchAvailabilityResponse> responseObserver) {

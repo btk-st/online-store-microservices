@@ -14,10 +14,61 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Servlet фильтр для распределенной трассировки HTTP запросов.
+ * <p>
+ * Работает в связке с {@link GrpcServerTracingInterceptor} для обеспечения
+ * сквозной трассировки через все сервисы.
+ * </p>
+ *
+ * <h3>Логика работы:</h3>
+ * <ol>
+ * <li>Извлекает traceId из HTTP заголовка "traceId" (если есть)</li>
+ * <li>Если traceId отсутствует - генерирует новый UUID</li>
+ * <li>Генерирует spanId для текущего HTTP вызова</li>
+ * <li>Сохраняет parentSpanId из заголовка "spanId" (если есть)</li>
+ * <li>Устанавливает все ID в MDC для логирования</li>
+ * <li>Прокидывает traceId и spanId в ответные заголовки</li>
+ * <li>Очищает MDC после завершения запроса</li>
+ * </ol>
+ *
+ * <h3>Заголовки запроса (входящие):</h3>
+ * <ul>
+ * <li>{@code traceId} - идентификатор всей цепочки вызовов</li>
+ * <li>{@code spanId} - идентификатор предыдущего вызова (parent)</li>
+ * </ul>
+ *
+ * <h3>Заголовки ответа (исходящие):</h3>
+ * <ul>
+ * <li>{@code traceId} - тот же traceId, что пришел в запросе</li>
+ * <li>{@code spanId} - сгенерированный spanId текущего запроса</li>
+ * </ul>
+ *
+ * <h3>Исключенные пути (не трассируются):</h3>
+ * <ul>
+ * <li>/actuator/** - эндпоинты Spring Boot Actuator</li>
+ * <li>/swagger/** - Swagger UI</li>
+ * <li>/v3/api-docs - OpenAPI спецификация</li>
+ * </ul>
+ */
 @Slf4j
 @Component
 public class TracingFilter extends OncePerRequestFilter {
 
+	/**
+	 * Обрабатывает входящий HTTP запрос, добавляя трассировочную информацию.
+	 *
+	 * @param request
+	 *            HTTP запрос
+	 * @param response
+	 *            HTTP ответ
+	 * @param filterChain
+	 *            цепочка фильтров
+	 * @throws ServletException
+	 *             если ошибка сервлета
+	 * @throws IOException
+	 *             если ошибка ввода-вывода
+	 */
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
@@ -46,6 +97,14 @@ public class TracingFilter extends OncePerRequestFilter {
 		return String.format("%s-%s", type, UUID.randomUUID().toString().substring(0, 8));
 	}
 
+	/**
+	 * Определяет, нужно ли пропустить фильтр для данного запроса. Исключаются пути
+	 * мониторинга и документации, чтобы не засорять трассировку.
+	 *
+	 * @param request
+	 *            HTTP запрос
+	 * @return true если фильтр не должен применяться
+	 */
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String path = request.getRequestURI();
