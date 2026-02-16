@@ -3,6 +3,7 @@ package com.onlinestore.order.service;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.MDC;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import com.onlinestore.order.kafka.OrderCreatedEvent;
 import com.onlinestore.order.mapper.OrderMapper;
 import com.onlinestore.order.repository.OutboxEventRepository;
 import com.onlinestore.order.service.api.TransactionalOutboxService;
+import com.onlinestore.order.tracing.TracingUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ public class TransactionalOutboxServiceImpl implements TransactionalOutboxServic
 	private final ObjectMapper objectMapper;
 	private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
 	private final OrderMapper orderMapper;
+	private final TracingUtil tracingUtil;
 
 	// Вызывается в той же транзакции что и создание Order
 	public void saveOrderCreatedEvent(Order order) {
@@ -75,6 +78,9 @@ public class TransactionalOutboxServiceImpl implements TransactionalOutboxServic
 			OrderCreatedEvent orderEvent = objectMapper.readValue(event.getPayload(), OrderCreatedEvent.class);
 
 			String orderId = orderEvent.getOrderId().toString();
+
+			// Добавляем traceId, spanId
+			addTracing();
 			// Отправляем в Kafka
 			kafkaTemplate.send("orders", orderId, orderEvent).get(5, TimeUnit.SECONDS); // Блокируем для надежности
 
@@ -84,5 +90,10 @@ public class TransactionalOutboxServiceImpl implements TransactionalOutboxServic
 			log.error("Failed to send outbox event {} to Kafka", event.getId(), e);
 			throw new RuntimeException("Failed to send to Kafka", e);
 		}
+	}
+
+	private void addTracing() {
+		MDC.put("traceId", tracingUtil.generateTraceId());
+		MDC.put("spanId", tracingUtil.generateSpanId("outbox"));
 	}
 }

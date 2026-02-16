@@ -1,7 +1,6 @@
 package com.onlinestore.order.tracing;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,20 +11,24 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class TracingFilter extends OncePerRequestFilter {
+
+	private final TracingUtil tracingUtil;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		String traceId = request.getHeader("traceId");
 		if (traceId == null) {
-			traceId = UUID.randomUUID().toString();
+			traceId = tracingUtil.generateTraceId();
 		}
-		String spanId = generateSpanId("http");
+		String spanId = tracingUtil.generateSpanId("http");
 		String parentSpanId = request.getHeader("spanId");
 
 		MDC.put("traceId", traceId);
@@ -41,9 +44,6 @@ public class TracingFilter extends OncePerRequestFilter {
 			MDC.clear();
 		}
 
-	}
-	private String generateSpanId(String type) {
-		return String.format("%s-%s", type, UUID.randomUUID().toString().substring(0, 8));
 	}
 
 	@Override
