@@ -13,6 +13,36 @@ import com.onlinestore.notification.service.api.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Kafka consumer для обработки событий о заказах.
+ *
+ * <h3>Интеграция с системой трассировки:</h3>
+ * <p>
+ * Получает traceId и spanId из заголовков Kafka сообщения для обеспечения
+ * сквозной трассировки через все микросервисы. Это позволяет связать лог
+ * событий в Notification сервисе с исходным HTTP/gRPC запросом.
+ * </p>
+ *
+ * <h3>Обработка ошибок:</h3>
+ * <p>
+ * При возникновении исключения в процессе обработки события:
+ * <ul>
+ * <li>Сообщение НЕ подтверждается (acknowledgment не вызывается)</li>
+ * <li>Kafka автоматически переотправит сообщение (в зависимости от
+ * конфигурации)</li>
+ * </ul>
+ * </p>
+ *
+ * <h3>MDC контекст для логирования:</h3>
+ * <ul>
+ * <li>traceId - из заголовка Kafka (сквозной идентификатор)</li>
+ * <li>spanId - генерируется для текущей Kafka операции</li>
+ * <li>parentSpanId - spanId отправителя (из заголовка)</li>
+ * </ul>
+ *
+ * @see OrderService#processOrderEvent(OrderCreatedEvent)
+ * @see org.springframework.kafka.annotation.KafkaListener
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -20,6 +50,23 @@ public class OrderKafkaConsumer {
 
 	private final OrderService orderService;
 
+	/**
+	 * Обрабатывает событие о создании нового заказа.
+	 * <p>
+	 * Вызывается автоматически при поступлении нового сообщения в топик "orders".
+	 * </p>
+	 *
+	 * @param event
+	 *            событие с данными о заказе
+	 * @param traceId
+	 *            сквозной идентификатор трассировки (из заголовков Kafka)
+	 * @param spanId
+	 *            идентификатор предыдущего вызова (из заголовков Kafka)
+	 * @param acknowledgment
+	 *            механизм подтверждения обработки сообщения
+	 * @throws Exception
+	 *             если обработка не удалась (сообщение будет переотправлено)
+	 */
 	@KafkaListener(topics = "orders", groupId = "${spring.kafka.consumer.group-id}")
 	public void consume(OrderCreatedEvent event, @Header(value = "traceId", required = false) String traceId,
 			@Header(value = "spanId", required = false) String spanId, Acknowledgment acknowledgment) {
