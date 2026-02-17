@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 
+/**
+ * gRPC клиент для проверки доступности товара в микросервисе inventory.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -20,6 +23,13 @@ public class InventoryGrpcClient {
 	private InventoryServiceGrpc.InventoryServiceBlockingStub inventoryStub;
 	private final OrderItemMapper orderItemMapper;
 
+	/**
+	 * Пакетная проверка наличия достаточного количества товаров.
+	 * 
+	 * @param createOrderRequest
+	 *            список товаров для проверки
+	 * @return список товаров с информацией о доступности
+	 */
 	public BatchAvailabilityResponse batchCheckAvailability(CreateOrderRequest createOrderRequest) {
 		log.info("Checking availability for {} items", createOrderRequest.getItems().size());
 

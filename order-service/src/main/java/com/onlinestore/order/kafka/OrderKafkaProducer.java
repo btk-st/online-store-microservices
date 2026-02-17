@@ -9,6 +9,9 @@ import com.onlinestore.order.mapper.OrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Класс для отправки информации о заказе через Kafka.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -17,6 +20,12 @@ public class OrderKafkaProducer {
 	private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
 	private final OrderMapper orderMapper;
 
+	/**
+	 * Отправить информацию об успешно созданном заказе.
+	 * 
+	 * @param order
+	 *            заказ для отправки
+	 */
 	public void sendOrderCreated(Order order) {
 		try {
 			OrderCreatedEvent event = orderMapper.toOrderCreatedEvent(order);

@@ -34,7 +34,19 @@ public class TransactionalOutboxServiceImpl implements TransactionalOutboxServic
 	private final OrderMapper orderMapper;
 	private final TracingUtil tracingUtil;
 
-	// Вызывается в той же транзакции что и создание Order
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * <b>Особенности реализации:</b>
+	 * <ul>
+	 * <li>Использует OrderMapper для конвертации Order → OrderCreatedEvent</li>
+	 * <li>Сохраняет событие со статусом PENDING и retryCount = 0</li>
+	 * <li>Транзакция гарантирует, что событие сохранится вместе с заказом</li>
+	 * </ul>
+	 * </p>
+	 */
+	@Override
 	public void saveOrderCreatedEvent(Order order) {
 		OrderCreatedEvent event = orderMapper.toOrderCreatedEvent(order);
 
@@ -51,9 +63,20 @@ public class TransactionalOutboxServiceImpl implements TransactionalOutboxServic
 		}
 	}
 
+	/**
+	 * Обрабатывает outbox события с повторными попытками.
+	 * <p>
+	 * Логика обработки:
+	 * <ul>
+	 * <li>Находит все PENDING события</li>
+	 * <li>Пытается отправить каждое в Kafka</li>
+	 * <li>При успехе → статус PROCESSED</li>
+	 * <li>При ошибке → увеличивает retryCount</li>
+	 * <li>После 3 ошибок → статус FAILED</li>
+	 * </ul>
+	 * </p>
+	 */
 	// TODO: добавить параллельную обработку. Сейчас только блокирующие вызовы
-
-	// Периодическая задача отправляет PENDING события
 	@Scheduled(fixedDelay = 10000) // Каждые 10 секунд
 	public void processOutboxEvents() {
 		List<OutboxEvent> pendingEvents = outboxRepository.findByStatus(OutboxEvent.EventStatus.PENDING);
@@ -72,6 +95,19 @@ public class TransactionalOutboxServiceImpl implements TransactionalOutboxServic
 		}
 	}
 
+	/**
+	 * Отправляет конкретное outbox событие в Kafka.
+	 *
+	 * @param event
+	 *            outbox событие для отправки
+	 * @throws RuntimeException
+	 *             если:
+	 *             <ul>
+	 *             <li>десериализация JSON не удалась</li>
+	 *             <li>Kafka недоступна (timeout 5 сек)</li>
+	 *             <li>другая ошибка при отправке</li>
+	 *             </ul>
+	 */
 	private void sendEventToKafka(OutboxEvent event) {
 		try {
 			// Десериализуй из JSON в OrderCreatedEvent
@@ -92,6 +128,10 @@ public class TransactionalOutboxServiceImpl implements TransactionalOutboxServic
 		}
 	}
 
+	/**
+	 * Добавляет трассировочную информацию в MDC для логирования. Используется для
+	 * связывания логов outbox обработчика с исходным запросом.
+	 */
 	private void addTracing() {
 		MDC.put("traceId", tracingUtil.generateTraceId());
 		MDC.put("spanId", tracingUtil.generateSpanId("outbox"));

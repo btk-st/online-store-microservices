@@ -18,6 +18,33 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Фильтр аутентификации для JWT токенов.
+ * <p>
+ * Обрабатывает входящие запросы, извлекает JWT из заголовка Authorization,
+ * валидирует токен и устанавливает аутентификацию в SecurityContext.
+ * </p>
+ *
+ * <h3>Логика работы:</h3>
+ * <ol>
+ * <li>Проверяет наличие заголовка "Authorization: Bearer {token}"</li>
+ * <li>Если заголовок отсутствует или неверный - пропускает запрос дальше (401
+ * вернет Spring Security)</li>
+ * <li>Извлекает username из токена через {@link JwtService}</li>
+ * <li>Загружает UserDetails по username</li>
+ * <li>Валидирует токен через {@link JwtService}</li>
+ * <li>Устанавливает аутентификацию в SecurityContext</li>
+ * </ol>
+ *
+ * <h3>Ожидаемый заголовок:</h3>
+ * 
+ * <pre>
+ * Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ * </pre>
+ *
+ * @see JwtService
+ * @see org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -25,6 +52,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final JwtService jwtService;
 	private final UserDetailsService userDetailsService;
 
+	/**
+	 * Фильтрует запрос, выполняя JWT аутентификацию.
+	 *
+	 * @param request
+	 *            HTTP запрос
+	 * @param response
+	 *            HTTP ответ
+	 * @param filterChain
+	 *            цепочка фильтров
+	 */
 	@Override
 	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
 			@NonNull FilterChain filterChain) throws ServletException, IOException {

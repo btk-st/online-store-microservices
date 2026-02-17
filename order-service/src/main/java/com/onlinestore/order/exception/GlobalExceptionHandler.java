@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	// Обработка ProductNotAvailableException
 	@ExceptionHandler(ProductNotAvailableException.class)
 	@ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
 	public ErrorResponse handleProductNotAvailable(ProductNotAvailableException ex) {
@@ -31,9 +30,8 @@ public class GlobalExceptionHandler {
 				.build();
 	}
 
-	// Обработка валидации (Bean Validation)
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST) // ← 400
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ErrorResponse handleValidation(MethodArgumentNotValidException ex) {
 		Map<String, Object> errors = new HashMap<>();
 		ex.getBindingResult().getFieldErrors()
@@ -44,12 +42,11 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST) // ← 400
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
 		return ErrorResponse.builder().status(400).error("Bad Request").message(ex.getMessage()).build();
 	}
 
-	// DTO для ответа
 	@Builder
 	@Data
 	public static class ErrorResponse {

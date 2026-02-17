@@ -4,6 +4,9 @@ import java.util.UUID;
 
 import lombok.Getter;
 
+/**
+ * Выбрасывается при не прохождении проверки доступности продукта
+ */
 @Getter
 public class ProductNotAvailableException extends RuntimeException {
 	private final UUID productId;
