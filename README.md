@@ -1,70 +1,74 @@
-# Online Store Microservices
+# 🛍️ Система обработки заказов
 
-Микросервисная система обработки заказов для интернет-магазина.
+Микросервисная система для интернет-магазина на Spring Boot.
 
-## 🚀 Быстрый старт
+## 🚀 Быстрый запуск
 
-### Предварительные требования
-- Docker Desktop
-- Java 17
-- IntelliJ IDEA (рекомендуется)
-
-### 1. Запуск инфраструктуры
+1. **Собрать проекты:**
 ```bash
-# В корне проекта
+mvn clean install -f order-service/pom.xml
+mvn clean install -f inventory-service/pom.xml
+mvn clean install -f notification-service/pom.xml
+```
+
+2. **Запустить всю систему:**
+```bash
 docker-compose up -d
 ```
 
-### 2. Проверка что всё запустилось
+Готово! Все сервисы запустятся автоматически.
+
+## 🌐 Доступные сервисы
+
+| Сервис | Порт | Назначение |
+|--------|------|------------|
+| **Order Service** | 8082 | Заказы и авторизация |
+| **Inventory Service** | 8081 | Управление товарами |
+| **Notification Service** | 8083 | Аналитика заказов |
+| **Kafka UI** | 8090 | Мониторинг Kafka |
+| **Redis** | 6379 | Кэширование |
+
+## 📖 Документация API (Swagger)
+
+После запуска системы документация API доступна по адресам:
+
+| Сервис | Swagger UI | OpenAPI JSON |
+|--------|------------|--------------|
+| **Order Service** | http://localhost:8082/swagger-ui.html | http://localhost:8082/v3/api-docs |
+| **Inventory Service** | http://localhost:8081/swagger-ui.html | http://localhost:8081/v3/api-docs |
+| **Notification Service** | http://localhost:8083/swagger-ui.html | http://localhost:8083/v3/api-docs |
+
+**Swagger UI предоставляет:**
+- Полный список всех endpoint'ов
+- Возможность тестирования API прямо из браузера
+- Описание моделей данных
+- Информацию о требуемых заголовках (JWT и т.д.)
+
+## 🛠️ Управление системой
+
 ```bash
+# Остановить систему
+docker-compose down
+
+# Остановить и удалить данные
+docker-compose down -v
+
+# Перезапустить один сервис
+docker-compose restart order-service
+
+# Посмотреть логи
+docker-compose logs -f
+
+# Проверить статус
 docker-compose ps
 ```
-Должно быть 5 контейнеров в статусе "Up"
 
-### 3. Веб-интерфейсы
-- **Kafka UI**: http://localhost:8080
-- **Inventory Service Swagger**: http://localhost:8081/swagger-ui.html
-- **Order Service Swagger**: http://localhost:8080/swagger-ui.html
-- **Notification Service API**: http://localhost:8082/api/orders
-
-### 4. Запуск микросервисов
-Каждый сервис запускается отдельно из IDEA:
-1. Открой папку сервиса как отдельный проект
-2. Запусти `YourServiceApplication.java`
-3. Или через Maven: `./mvnw spring-boot:run`
-
-## 📡 Сервисы и порты
-
-| Сервис | Порт | Описание |
-|--------|------|----------|
-| Order Service | 8080 | Основной API, аутентификация |
-| Inventory Service | 8081 | Управление товарами |
-| Notification Service | 8082 | Уведомления и аналитика |
-| PostgreSQL (inventory) | 5432 | БД для товаров |
-| PostgreSQL (order) | 5433 | БД для пользователей |
-| PostgreSQL (notification) | 5434 | БД для заказов |
-| Kafka | 9092 | Брокер сообщений |
-| Kafka UI | 8080 | Веб-интерфейс |
-
-## 🔧 Технологии
-- Java 17, Spring Boot 3
-- PostgreSQL, Kafka, gRPC
-- Docker Compose
-- JWT аутентификация
-
-## 📝 API Endpoints
-
-### Inventory Service (`:8081`)
+## 📁 Структура проекта
 ```
-GET    /api/products          # список товаров
-GET    /api/products/{id}     # товар по ID
-POST   /api/products          # создать товар
+├── order-service/       # (порт 8082)
+├── inventory-service/   # (порт 8081)
+├── notification-service/# (порт 8083)
+└── docker-compose.yml   # Запуск всего стека
 ```
 
-### Order Service (`:8080`)
-```
-POST   /auth/login           # получить JWT токен
-POST   /api/orders           # создать заказ
-```
-
----
+**Запускается:** 3 микросервиса + 3 PostgreSQL + Kafka + Zookeeper + Redis + Kafka UI

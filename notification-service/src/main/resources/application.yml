@@ -1,0 +1,55 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5436/notification_db}
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+  kafka:
+    bootstrap-servers:  ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.onlinestore.notification.kafka"
+        spring.json.type.mapping: orderCreated:com.onlinestore.notification.kafka.OrderCreatedEvent
+      enable-auto-commit: false
+    listener:
+      ack-mode: manual_immediate
+      
+  # Redis конфигурация
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-NO_TRACE}] [%X{spanId:-NO_SPAN}] [%X{parentSpanId:-NO_PARENT_SPAN}] %-5level [%thread] %logger{36} - %msg%n"
+  level:
+    com.onlinestore.notification: TRACE
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type: TRACE
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method

@@ -1,27 +1,24 @@
 services:
 
-  # СЕРВИС 1: База данных для Inventory Service
+  #База данных для Inventory Service
   inventory-db:
-    # Используем официальный образ PostgreSQL 15 (alpine - маленький)
     image: postgres:15-alpine
     container_name: inventory-postgres
     environment:
       POSTGRES_DB: inventory_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    # Проброс портов: внешний:внутренний
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - inventory-data:/var/lib/postgresql/data
-    # Healthcheck - проверка, что сервис здоров
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # СЕРВИС 2: База для Order Service
+  #База данных для Order Service
   order-db:
     image: postgres:15-alpine
     container_name: order-postgres
@@ -33,8 +30,79 @@ services:
       - "5433:5432"
     volumes:
       - order-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # СЕРВИС 3: Zookeeper
+  #База для Notification Service
+  notification-db:
+    image: postgres:15-alpine
+    container_name: notification-postgres
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - notification-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  #Inventory микросервис
+  inventory-service:
+    build: ./inventory-service
+    container_name: inventory-microservice
+    ports:
+      - "8081:8080"
+      - "9090:9090"
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-db:5432/inventory_db
+
+  #Orders микросервис
+  order-service:
+    build: ./order-service
+    container_name: order-microservice
+    ports:
+      - "8082:8080"
+    depends_on:
+      kafka:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      order-db:
+        condition: service_healthy
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://order-db:5432/order_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      GRPC_CLIENT_INVENTORY_SERVICE_ADDRESS: inventory-service:9090
+
+  #Notification микросервис
+  notification-service:
+    build: ./notification-service
+    container_name: notification-microservice
+    ports:
+      - "8083:8080"
+    depends_on:
+      kafka:
+        condition: service_started
+      notification-db:
+        condition: service_healthy
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://notification-db:5432/notification_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  #Zookeeper
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper
@@ -44,7 +112,7 @@ services:
     ports:
       - "2181:2181"  # открываем порт
 
-  # СЕРВИС 4: Kafka
+  #Kafka
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: kafka
@@ -66,7 +134,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # СЕРВИС 5: Kafka UI
+  #Kafka UI
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -78,10 +146,21 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     ports:
-      - "8080:8080"  # веб-интерфейс будет на http://localhost:8080
+      - "8090:8080"  # веб-интерфейс будет на http://localhost:8080
+
+  #Redis
+  redis:
+    image: redis:alpine
+    container_name: my-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes  # сохраняет данные при перезагрузке
 
 # Тома (volumes) - постоянное хранилище данных
 volumes:
   inventory-data:
   order-data:
   notification-data:
+  redis_data:
